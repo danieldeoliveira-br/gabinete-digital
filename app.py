@@ -5,7 +5,7 @@ from datetime import datetime
 from groq import Groq
 
 # --- CONFIGURAÇÃO DA PÁGINA ---
-st.set_page_config(page_title="Gabinete Digital", page_icon="🏛️", layout="wide")
+st.set_page_config(page_title="Legislativo Digital", page_icon="🏛️", layout="wide")
 
 # --- CONFIGURAÇÃO DA IA ---
 try:
@@ -120,7 +120,7 @@ def salvar_post_mural(dados):
 if os.path.exists("brasao.png"):
     st.sidebar.image("brasao.png", width=120)
 
-st.sidebar.title("Gabinete Digital")
+st.sidebar.title("Legislativo Digital")
 st.sidebar.markdown("**Câmara Municipal de Espumoso**")
 st.sidebar.markdown("Rio Grande do Sul")
 st.sidebar.markdown("[🌐 Site Oficial](https://www.camaraespumoso.rs.gov.br)")
@@ -131,7 +131,7 @@ if "navegacao" not in st.session_state:
 
 modo = st.sidebar.selectbox(
     "Selecione a ferramenta:", 
-    ["🏠 Início", "👤 Gabinete Virtual", "⚖️ Assistente de Proposições (com IA)", "💡 Banco de Ideias"],
+    ["🏠 Início", "👤 Gabinete Virtual", "🔐 Área do Vereador", "💡 Banco de Ideias"],
     key="navegacao"
 )
 
@@ -156,7 +156,7 @@ if modo == "🏠 Início":
     st.divider()
 
     def ir_para_assistente():
-        st.session_state.navegacao = "⚖️ Assistente de Proposições (com IA)"
+        st.session_state.navegacao = "🔐 Área do Vereador"
     def ir_para_ideias():
         st.session_state.navegacao = "💡 Banco de Ideias"
     def ir_para_gabinete():
@@ -178,42 +178,68 @@ if modo == "🏠 Início":
 
     st.divider()
 
-# --- TELA: GABINETE VIRTUAL (NOVA) ---
+# --- TELA: GABINETE VIRTUAL (COM FEED GERAL) ---
 elif modo == "👤 Gabinete Virtual":
     def voltar_inicio():
         st.session_state.navegacao = "🏠 Início"
     st.button("⬅️ Voltar para o Início", on_click=voltar_inicio, key="voltar_gabinete")
     
     st.header("👤 Gabinetes Virtuais")
-    st.write("Selecione um vereador para ver suas atividades e entrar em contato.")
     
-    vereador_selecionado = st.selectbox("Escolha o Vereador:", ["Selecione..."] + LISTA_VEREADORES)
+    # Seletor de Vereadores
+    vereador_selecionado = st.selectbox("Selecione um vereador para ver o perfil completo ou veja o Feed Geral abaixo:", ["Selecione..."] + LISTA_VEREADORES)
     
-    if vereador_selecionado != "Selecione...":
+    # --- MODO 1: FEED GERAL (Ninguém selecionado) ---
+    if vereador_selecionado == "Selecione...":
+        st.divider()
+        st.subheader("📢 Feed de Notícias - Últimas Atividades da Câmara")
+        
+        if os.path.exists(arquivo_mural):
+            df_mural = pd.read_csv(arquivo_mural)
+            if not df_mural.empty:
+                # Pega as últimas 10 postagens (invertendo a ordem)
+                ultimas_postagens = df_mural.iloc[::-1].head(10)
+                
+                for index, row in ultimas_postagens.iterrows():
+                    with st.container(border=True):
+                        # Cabeçalho do Post
+                        col_avatar, col_texto = st.columns([1, 6])
+                        with col_avatar:
+                            st.markdown("### 🏛️")
+                        with col_texto:
+                            st.markdown(f"**{row['Vereador']}**")
+                            st.caption(f"Publicado em: {row['Data']}")
+                        
+                        # Conteúdo
+                        st.markdown(f"#### {row['Titulo']}")
+                        st.write(row['Mensagem'])
+            else:
+                st.info("Ainda não há publicações no mural.")
+        else:
+            st.info("Ainda não há publicações no mural.")
+
+    # --- MODO 2: PERFIL INDIVIDUAL (Vereador Selecionado) ---
+    else:
         st.divider()
         col_foto, col_info = st.columns([1, 3])
         
         with col_foto:
-            # Ícone genérico de usuário (pode substituir por fotos reais depois)
             st.markdown("<div style='font-size: 100px; text-align: center;'>👤</div>", unsafe_allow_html=True)
         
         with col_info:
             st.subheader(vereador_selecionado)
             st.write("Câmara Municipal de Espumoso - RS")
-            # Botão de contato direto
             st.link_button("💬 Enviar mensagem no WhatsApp", "https://wa.me/555433834488", type="primary")
         
         st.divider()
         st.subheader(f"📰 Mural de Atividades - {vereador_selecionado}")
         
-        # Lógica para mostrar os posts
         if os.path.exists(arquivo_mural):
             df_mural = pd.read_csv(arquivo_mural)
-            # Filtra apenas os posts desse vereador
+            # Filtra só as desse vereador
             posts_vereador = df_mural[df_mural["Vereador"] == vereador_selecionado]
             
             if not posts_vereador.empty:
-                # Mostra do mais recente para o mais antigo
                 for index, row in posts_vereador.iloc[::-1].iterrows():
                     with st.container(border=True):
                         st.caption(f"🗓️ Publicado em: {row['Data']}")
@@ -224,8 +250,8 @@ elif modo == "👤 Gabinete Virtual":
         else:
             st.info("Mural ainda não foi iniciado.")
 
-# --- TELA: ASSISTENTE DE PROPOSIÇÕES (RESTRITA) ---
-elif modo == "⚖️ Assistente de Proposições (com IA)":
+# --- TELA: ÁREA DO VEREADOR (RESTRITA) ---
+elif modo == "🔐 Área do Vereador":
     def voltar_inicio():
         st.session_state.navegacao = "🏠 Início"
     st.button("⬅️ Voltar para o Início", on_click=voltar_inicio, key="voltar_assistente")
@@ -244,17 +270,14 @@ elif modo == "⚖️ Assistente de Proposições (com IA)":
             else:
                 st.error("Senha incorreta.")
     else:
-        # --- ÁREA LOGADA DO VEREADOR ---
         if st.button("Sair do Modo Restrito", type="secondary"):
             st.session_state["acesso_vereador"] = False
             st.rerun()
         
         st.divider()
         
-        # Abas para separar as ferramentas internas
         aba_ia, aba_mural = st.tabs(["⚖️ Criar Documentos (IA)", "📢 Gerenciar Mural"])
         
-        # --- ABA 1: CRIAR DOCUMENTOS ---
         with aba_ia:
             st.header("Elaboração de Documentos")
             autor_selecionado = st.selectbox("Autor da Proposição:", LISTA_VEREADORES)
@@ -271,7 +294,6 @@ elif modo == "⚖️ Assistente de Proposições (com IA)":
                 else:
                     st.warning("Descreva a situação.")
         
-        # --- ABA 2: POSTAR NO MURAL (NOVA) ---
         with aba_mural:
             st.header("📢 Publicar no Gabinete Virtual")
             st.write("Escreva uma notícia ou atualização para aparecer no seu perfil público.")
@@ -291,8 +313,21 @@ elif modo == "⚖️ Assistente de Proposições (com IA)":
                         }
                         salvar_post_mural(dados_post)
                         st.success("Publicado com sucesso! Veja na aba 'Gabinete Virtual'.")
+                        st.rerun()
                     else:
                         st.error("Preencha título e mensagem.")
+            
+            st.divider()
+            st.subheader("🗑️ Editar ou Excluir Postagens Antigas")
+            st.info("Edite na tabela e clique em SALVAR para confirmar.")
+            
+            if os.path.exists(arquivo_mural):
+                df_mural = pd.read_csv(arquivo_mural)
+                df_editado = st.data_editor(df_mural, num_rows="dynamic", use_container_width=True, key="editor_mural")
+                if st.button("💾 Salvar Alterações no Mural"):
+                    df_editado.to_csv(arquivo_mural, index=False)
+                    st.success("Mural atualizado com sucesso!")
+                    st.rerun()
 
 # --- TELA: BANCO DE IDEIAS (PÚBLICA) ---
 elif modo == "💡 Banco de Ideias":
@@ -305,13 +340,13 @@ elif modo == "💡 Banco de Ideias":
     
     with st.form("form_ideia_completo", clear_on_submit=True):
         st.subheader("1. Sobre Você")
-        nome = st.text_input("Seu nome completo:")
+        nome = st.text_input("Seu nome completo:", help="Precisamos dos seus dados apenas para que o Vereador possa, se necessário, entrar em contato para entender melhor a sua ideia. Seus dados estarão protegidos.")
         contato = st.text_input("Seu número de celular:")
         
         st.subheader("2. Sua Ideia")
-        ideia_desc = st.text_area("Descreva sua sugestão:", height=150)
-        contribuição = st.text_area("Como isso ajuda a comunidade?", height=100)
-        localizacao = st.text_input("Localização:")
+        ideia_desc = st.text_area("Descreva sua sugestão:", height=150, help='Dica: Não se preocupe em escrever bonito.')
+        contribuição = st.text_area("Como isso ajuda a comunidade?", height=100, help='Dica: Nos diga por que sua ideia é importante.')
+        localizacao = st.text_input("Localização:", help='Dica: Nos diga onde o problema está.')
         areas = st.multiselect("Áreas:", ["Saúde", "Educação", "Obras", "Lazer", "Segurança", "Trânsito", "Outros"])
 
         st.markdown("---")
