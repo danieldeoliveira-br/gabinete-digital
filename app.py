@@ -76,10 +76,10 @@ def gerar_documento_ia(autor, tipo_doc, assunto):
        Foque na relevância social, jurídica e no interesse público.
     
     6. FECHAMENTO:
-       "Sala das Sessões, Espumoso – RS, [Data de Hoje]."
+       "Plenário Agostinho Somavilla, [Data de Hoje]."
        (Espaço para assinatura)
        {autor}
-       Vereador(a)
+       
        
     IMPORTANTE: Não use markdown de negrito (**) no corpo dos artigos.
     """
@@ -120,7 +120,7 @@ def salvar_post_mural(dados):
 if os.path.exists("brasao.png"):
     st.sidebar.image("brasao.png", width=120)
 
-st.sidebar.title("Legislativo Digital")
+st.sidebar.title("Legislativo Digital | Espumoso")
 st.sidebar.markdown("**Câmara Municipal de Espumoso**")
 st.sidebar.markdown("Rio Grande do Sul")
 st.sidebar.markdown("[🌐 Site Oficial](https://www.camaraespumoso.rs.gov.br)")
@@ -152,7 +152,7 @@ st.sidebar.caption("© 2025 Câmara de Espumoso")
 # --- TELA: INÍCIO ---
 if modo == "🏠 Início":
     st.title("Legislativo Digital")
-    st.write("Bem-vindo! Toque em uma das opções abaixo para começar:")
+    st.write("Bem-vindo ao ambiente digital do Poder Legislativo de Espumoso! Toque em uma das opções abaixo para começar:")
     st.divider()
 
     def ir_para_assistente():
@@ -166,14 +166,14 @@ if modo == "🏠 Início":
     
     with col_a:
         st.info("🤖 Para Vereadores")
-        st.button("Criar Lei / Documento 📝", use_container_width=True, on_click=ir_para_assistente)
+        st.button("Criar Lei / Proposições 📝", use_container_width=True, on_click=ir_para_assistente)
             
     with col_b:
         st.success("💡 Para a Comunidade")
         st.button("Enviar Ideia / Sugestão 🚀", use_container_width=True, on_click=ir_para_ideias)
 
     with col_c:
-        st.warning("🏛️ Gabinetes")
+        st.warning("🏛️ Mural dos Vereadores")
         st.button("Visitar Gabinete Virtual 👤", use_container_width=True, on_click=ir_para_gabinete)
 
     st.divider()
