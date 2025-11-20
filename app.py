@@ -94,28 +94,33 @@ def gerar_documento_ia(autor, tipo_doc, assunto):
     except Exception as e:
         return f"Ops, deu erro na IA: {e}"
 
-# --- FUNÇÃO DE BANCO DE DADOS ---
+# --- FUNÇÕES DE BANCO DE DADOS ---
 arquivo_ideias = "banco_de_ideias.csv"
+arquivo_mural = "mural_posts.csv"
 
 def salvar_ideia(dados):
     if not os.path.exists(arquivo_ideias):
-        df = pd.DataFrame(columns=[
-            "Data", "Nome", "Contato", "Ideia", "Contribuição", 
-            "Localização", "Áreas", "Idade", "Vereador Destino", "Concordou Termos"
-        ])
+        df = pd.DataFrame(columns=["Data", "Nome", "Contato", "Ideia", "Contribuição", "Localização", "Áreas", "Idade", "Vereador Destino", "Concordou Termos"])
     else:
         df = pd.read_csv(arquivo_ideias)
-    
     nova_linha = pd.DataFrame([dados])
     df = pd.concat([df, nova_linha], ignore_index=True)
     df.to_csv(arquivo_ideias, index=False)
+
+def salvar_post_mural(dados):
+    if not os.path.exists(arquivo_mural):
+        df = pd.DataFrame(columns=["Data", "Vereador", "Titulo", "Mensagem"])
+    else:
+        df = pd.read_csv(arquivo_mural)
+    nova_linha = pd.DataFrame([dados])
+    df = pd.concat([df, nova_linha], ignore_index=True)
+    df.to_csv(arquivo_mural, index=False)
 
 # --- MENU LATERAL ---
 if os.path.exists("brasao.png"):
     st.sidebar.image("brasao.png", width=120)
 
 st.sidebar.title("Gabinete Digital")
-
 st.sidebar.markdown("**Câmara Municipal de Espumoso**")
 st.sidebar.markdown("Rio Grande do Sul")
 st.sidebar.markdown("[🌐 Site Oficial](https://www.camaraespumoso.rs.gov.br)")
@@ -126,34 +131,19 @@ if "navegacao" not in st.session_state:
 
 modo = st.sidebar.selectbox(
     "Selecione a ferramenta:", 
-    ["🏠 Início", "⚖️ Assistente de Proposições (com IA)", "💡 Banco de Ideias"],
+    ["🏠 Início", "👤 Gabinete Virtual", "⚖️ Assistente de Proposições (com IA)", "💡 Banco de Ideias"],
     key="navegacao"
 )
 
 st.sidebar.markdown("---")
-
-# --- BOTÃO DE WHATSAPP VERDE (CORRIGIDO) ---
 link_whatsapp = "https://wa.me/555433834488" 
-
 st.sidebar.markdown(f"""
     <a href="{link_whatsapp}" target="_blank" style="text-decoration: none;">
-        <div style="
-            background-color: #128C7E; 
-            color: white; 
-            padding: 12px; 
-            border-radius: 8px; 
-            text-align: center; 
-            font-weight: bold;
-            font-family: sans-serif;
-            margin-bottom: 10px;
-            box-shadow: 0px 2px 5px rgba(0,0,0,0.2);
-            transition: 0.3s;">
+        <div style="background-color: #128C7E; color: white; padding: 12px; border-radius: 8px; text-align: center; font-weight: bold; font-family: sans-serif; margin-bottom: 10px; box-shadow: 0px 2px 5px rgba(0,0,0,0.2); transition: 0.3s;">
             💬 Falar no WhatsApp
         </div>
     </a>
 """, unsafe_allow_html=True)
-# -----------------------------------------------
-
 st.sidebar.markdown("---")
 st.sidebar.caption("Desenvolvido por:")
 st.sidebar.markdown("[**Daniel de Oliveira Colvero**](mailto:daniel.colvero@gmail.com)")
@@ -161,17 +151,18 @@ st.sidebar.caption("© 2025 Câmara de Espumoso")
 
 # --- TELA: INÍCIO ---
 if modo == "🏠 Início":
-    st.title("Assistente Virtual Legislativo")
+    st.title("Legislativo Digital")
     st.write("Bem-vindo! Toque em uma das opções abaixo para começar:")
     st.divider()
 
     def ir_para_assistente():
         st.session_state.navegacao = "⚖️ Assistente de Proposições (com IA)"
-        
     def ir_para_ideias():
         st.session_state.navegacao = "💡 Banco de Ideias"
+    def ir_para_gabinete():
+        st.session_state.navegacao = "👤 Gabinete Virtual"
 
-    col_a, col_b = st.columns(2)
+    col_a, col_b, col_c = st.columns(3)
     
     with col_a:
         st.info("🤖 Para Vereadores")
@@ -181,14 +172,62 @@ if modo == "🏠 Início":
         st.success("💡 Para a Comunidade")
         st.button("Enviar Ideia / Sugestão 🚀", use_container_width=True, on_click=ir_para_ideias)
 
+    with col_c:
+        st.warning("🏛️ Gabinetes")
+        st.button("Visitar Gabinete Virtual 👤", use_container_width=True, on_click=ir_para_gabinete)
+
     st.divider()
+
+# --- TELA: GABINETE VIRTUAL (NOVA) ---
+elif modo == "👤 Gabinete Virtual":
+    def voltar_inicio():
+        st.session_state.navegacao = "🏠 Início"
+    st.button("⬅️ Voltar para o Início", on_click=voltar_inicio, key="voltar_gabinete")
+    
+    st.header("👤 Gabinetes Virtuais")
+    st.write("Selecione um vereador para ver suas atividades e entrar em contato.")
+    
+    vereador_selecionado = st.selectbox("Escolha o Vereador:", ["Selecione..."] + LISTA_VEREADORES)
+    
+    if vereador_selecionado != "Selecione...":
+        st.divider()
+        col_foto, col_info = st.columns([1, 3])
+        
+        with col_foto:
+            # Ícone genérico de usuário (pode substituir por fotos reais depois)
+            st.markdown("<div style='font-size: 100px; text-align: center;'>👤</div>", unsafe_allow_html=True)
+        
+        with col_info:
+            st.subheader(vereador_selecionado)
+            st.write("Câmara Municipal de Espumoso - RS")
+            # Botão de contato direto
+            st.link_button("💬 Enviar mensagem no WhatsApp", "https://wa.me/555433834488", type="primary")
+        
+        st.divider()
+        st.subheader(f"📰 Mural de Atividades - {vereador_selecionado}")
+        
+        # Lógica para mostrar os posts
+        if os.path.exists(arquivo_mural):
+            df_mural = pd.read_csv(arquivo_mural)
+            # Filtra apenas os posts desse vereador
+            posts_vereador = df_mural[df_mural["Vereador"] == vereador_selecionado]
+            
+            if not posts_vereador.empty:
+                # Mostra do mais recente para o mais antigo
+                for index, row in posts_vereador.iloc[::-1].iterrows():
+                    with st.container(border=True):
+                        st.caption(f"🗓️ Publicado em: {row['Data']}")
+                        st.markdown(f"### {row['Titulo']}")
+                        st.write(row['Mensagem'])
+            else:
+                st.info(f"Ainda não há publicações no mural de {vereador_selecionado}.")
+        else:
+            st.info("Mural ainda não foi iniciado.")
 
 # --- TELA: ASSISTENTE DE PROPOSIÇÕES (RESTRITA) ---
 elif modo == "⚖️ Assistente de Proposições (com IA)":
-    
     def voltar_inicio():
         st.session_state.navegacao = "🏠 Início"
-        
     st.button("⬅️ Voltar para o Início", on_click=voltar_inicio, key="voltar_assistente")
 
     if "acesso_vereador" not in st.session_state:
@@ -197,9 +236,7 @@ elif modo == "⚖️ Assistente de Proposições (com IA)":
     if not st.session_state["acesso_vereador"]:
         st.header("🔒 Acesso Restrito")
         st.warning("Esta ferramenta é exclusiva para Vereadores e Assessores.")
-        
         senha_digitada = st.text_input("Digite a senha de acesso:", type="password")
-        
         if st.button("Entrar"):
             if senha_digitada == "camara2025": 
                 st.session_state["acesso_vereador"] = True
@@ -207,123 +244,100 @@ elif modo == "⚖️ Assistente de Proposições (com IA)":
             else:
                 st.error("Senha incorreta.")
     else:
+        # --- ÁREA LOGADA DO VEREADOR ---
         if st.button("Sair do Modo Restrito", type="secondary"):
             st.session_state["acesso_vereador"] = False
             st.rerun()
-            
+        
         st.divider()
-        st.header("⚖️ Elaboração de Documentos")
         
-        autor_selecionado = st.selectbox("Autor da Proposição:", LISTA_VEREADORES)
-
-        tipo_doc = st.selectbox(
-            "Tipo de Proposição", 
-            ["Pedido de Providência", "Pedido de Informação", "Indicação", "Projeto de Lei", "Moção de Aplauso", "Moção de Pesar"]
-        )
+        # Abas para separar as ferramentas internas
+        aba_ia, aba_mural = st.tabs(["⚖️ Criar Documentos (IA)", "📢 Gerenciar Mural"])
         
-        if tipo_doc == "Projeto de Lei":
-            st.warning("⚠️ Atenção: A IA tentará evitar Vício de Iniciativa criando leis 'Autorizativas' quando necessário.")
+        # --- ABA 1: CRIAR DOCUMENTOS ---
+        with aba_ia:
+            st.header("Elaboração de Documentos")
+            autor_selecionado = st.selectbox("Autor da Proposição:", LISTA_VEREADORES)
+            tipo_doc = st.selectbox("Tipo:", ["Pedido de Providência", "Pedido de Informação", "Indicação", "Projeto de Lei", "Moção de Aplauso", "Moção de Pesar"])
+            if tipo_doc == "Projeto de Lei":
+                st.warning("⚠️ Atenção: A IA evitará Vício de Iniciativa criando leis 'Autorizativas'.")
+            texto_input = st.text_area("Detalhamento:", height=150)
+            if st.button("📝 Elaborar Proposição"):
+                if texto_input:
+                    with st.spinner('Redigindo...'):
+                        texto_final = gerar_documento_ia(autor_selecionado, tipo_doc, texto_input)
+                        st.subheader("Minuta Gerada:")
+                        st.text_area("Copie aqui:", value=texto_final, height=500)
+                else:
+                    st.warning("Descreva a situação.")
         
-        st.info("💡 Dica: Quanto mais detalhes, melhor o texto final!")
-        texto_input = st.text_area("Detalhamento da solicitação:", height=150)
-        
-        if st.button("📝 Elaborar Proposição"):
-            if texto_input:
-                with st.spinner('Redigindo documento com rigor técnico...'):
-                    texto_final = gerar_documento_ia(autor_selecionado, tipo_doc, texto_input)
-                    st.subheader("Minuta Gerada:")
-                    st.text_area("Texto para Copiar:", value=texto_final, height=500)
-            else:
-                st.warning("Descreva a situação primeiro.")
+        # --- ABA 2: POSTAR NO MURAL (NOVA) ---
+        with aba_mural:
+            st.header("📢 Publicar no Gabinete Virtual")
+            st.write("Escreva uma notícia ou atualização para aparecer no seu perfil público.")
+            
+            with st.form("form_post_mural"):
+                autor_post = st.selectbox("Quem está postando?", LISTA_VEREADORES)
+                titulo_post = st.text_input("Título da Publicação (Ex: Visita à Escola X)")
+                mensagem_post = st.text_area("Texto da Publicação", height=150)
+                
+                if st.form_submit_button("Publicar no Mural 🚀"):
+                    if titulo_post and mensagem_post:
+                        dados_post = {
+                            "Data": datetime.now().strftime("%d/%m/%Y"),
+                            "Vereador": autor_post,
+                            "Titulo": titulo_post,
+                            "Mensagem": mensagem_post
+                        }
+                        salvar_post_mural(dados_post)
+                        st.success("Publicado com sucesso! Veja na aba 'Gabinete Virtual'.")
+                    else:
+                        st.error("Preencha título e mensagem.")
 
 # --- TELA: BANCO DE IDEIAS (PÚBLICA) ---
 elif modo == "💡 Banco de Ideias":
-    
     def voltar_inicio():
         st.session_state.navegacao = "🏠 Início"
-        
     st.button("⬅️ Voltar para o Início", on_click=voltar_inicio, key="voltar_ideias")
 
     st.title("Banco de Ideias - Espumoso/RS")
+    st.info("Bem-vindo(a)! Envie suas sugestões construtivas para a cidade.")
     
-    st.info("""
-    **Bem-vindo(a) ao Banco de Ideias da Câmara de Espumoso!**
-    Este é o seu canal direto para enviar PROPOSTAS e SUGESTÕES CONSTRUTIVAS focadas em melhorar a nossa cidade.
-    """)
-    
-    with st.expander("ℹ️ PARA QUE SERVE ESTE FORMULÁRIO (Clique para ler)"):
-        st.markdown("""
-        Use este espaço para enviar IDEIAS de competência MUNICIPAL, tais como:
-        * **Sugestões** para novos Projetos de Lei municipais.
-        * **Indicações** (Ex: "Pedir a instalação de um quebra-molas na frente da escola Y").
-        * **Pedidos de Providência** (Ex: "Solicitar o conserto do buraco na Rua X").
-        
-        **IMPORTANTE: FOCO EM ESPUMOSO**
-        Este formulário NÃO é o canal para manifestações gerais sobre política, nem para Reclamações ou Denúncias (para estes, use o canal de Ouvidoria).
-        Se você tem uma IDEIA ou SUGESTÃO para Espumoso, você está no lugar certo!
-        """)
-    
-    st.divider()
-
     with st.form("form_ideia_completo", clear_on_submit=True):
         st.subheader("1. Sobre Você")
-        nome = st.text_input("Seu nome completo:", help="Precisamos dos seus dados apenas para que o Vereador possa, se necessário, entrar em contato para entender melhor a sua ideia. Seus dados estarão protegidos.")
+        nome = st.text_input("Seu nome completo:")
         contato = st.text_input("Seu número de celular:")
         
         st.subheader("2. Sua Ideia")
-        ideia_desc = st.text_area("Descreva sua sugestão/ideia:", height=150, help='Dica: Não se preocupe em escrever bonito. Ex: "Sugiro colocar um quebra-molas na Rua X..."')
-        contribuição = st.text_area("Como isso pode contribuir para a comunidade?", height=100, help='Dica: Nos diga por que sua ideia é importante.')
-        localizacao = st.text_input("Localização:", help='Dica: Nos diga onde o problema está.')
-        
-        st.markdown("**Em qual(is) área(s) você acha que sua ideia pode melhorar?**")
-        st.caption("Pode marcar mais de uma!")
-        areas = st.multiselect("Selecione as áreas:", ["Agricultura e Zona Rural", "Cultura e Lazer", "Educação", "Empregabilidade", "Infraestrutura", "Meio Ambiente", "Mobilidade Urbana", "Saúde", "Segurança", "Tecnologia", "Trânsito"])
-
-        st.markdown("---")
-        st.markdown("**Qual a sua idade?**")
-        st.caption("Usado para estatística anônima.")
-        idade = st.radio("Faixa etária:", ["Menos de 18 anos", "18 a 30 anos", "31 a 45 anos", "46 a 60 anos", "Acima de 60 anos"], horizontal=True)
+        ideia_desc = st.text_area("Descreva sua sugestão:", height=150)
+        contribuição = st.text_area("Como isso ajuda a comunidade?", height=100)
+        localizacao = st.text_input("Localização:")
+        areas = st.multiselect("Áreas:", ["Saúde", "Educação", "Obras", "Lazer", "Segurança", "Trânsito", "Outros"])
 
         st.markdown("---")
         st.subheader("3. Destino")
-        st.markdown("**Enviar sugestão para qual vereador(a)?**")
-        vereador = st.selectbox("Escolha o vereador:", ["Escolha um vereador..."] + LISTA_VEREADORES)
-
-        st.markdown("---")
-        st.caption("""
-        Ao enviar sua sugestão, você concorda que ela será analisada.
-        Você confirma que sua proposta é uma sugestão construtiva focada em Espumoso.
-        """)
-        termos = st.checkbox("Eu li e concordo com os termos.")
+        vereador = st.selectbox("Para qual vereador?", ["Escolha um vereador..."] + LISTA_VEREADORES)
         
-        if st.form_submit_button("🚀 Enviar Sugestão"):
-            if not termos:
-                st.error("Você precisa concordar com os termos para enviar.")
-            elif not ideia_desc:
-                st.error("Por favor, descreva sua ideia.")
-            elif vereador == "Escolha um vereador...":
-                st.error("Por favor, escolha um vereador para receber a ideia.")
-            else:
-                dados_salvar = {
+        st.markdown("---")
+        termos = st.checkbox("Li e concordo com os termos.")
+        
+        if st.form_submit_button("🚀 Enviar"):
+            if termos and ideia_desc and vereador != "Escolha um vereador...":
+                dados = {
                     "Data": datetime.now().strftime("%d/%m/%Y %H:%M"),
-                    "Nome": nome,
-                    "Contato": contato,
-                    "Ideia": ideia_desc,
-                    "Contribuição": contribuição,
-                    "Localização": localizacao,
-                    "Áreas": ", ".join(areas),
-                    "Idade": idade,
-                    "Vereador Destino": vereador,
-                    "Concordou Termos": "Sim"
+                    "Nome": nome, "Contato": contato, "Ideia": ideia_desc,
+                    "Contribuição": contribuição, "Localização": localizacao,
+                    "Áreas": ", ".join(areas), "Vereador Destino": vereador, "Concordou Termos": "Sim"
                 }
-                salvar_ideia(dados_salvar)
+                salvar_ideia(dados)
                 st.balloons()
-                st.success("Sua ideia foi enviada com sucesso!")
+                st.success("Enviado com sucesso!")
+            else:
+                st.error("Preencha os campos obrigatórios e aceite os termos.")
 
     st.divider()
     st.subheader("🔐 Área Administrativa")
     senha = st.text_input("Senha ADM:", type="password")
-    
     if senha == "admin123":
         st.success("Acesso Liberado!")
         if os.path.exists(arquivo_ideias):
@@ -331,7 +345,3 @@ elif modo == "💡 Banco de Ideias":
             st.dataframe(df, use_container_width=True)
             csv = df.to_csv(index=False).encode('utf-8')
             st.download_button("📥 Baixar Relatório", data=csv, file_name="ideias.csv", mime="text/csv")
-        else:
-            st.info("Nenhuma ideia ainda.")
-    elif senha:
-        st.error("Senha incorreta.")
