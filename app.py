@@ -116,6 +116,14 @@ def salvar_post_mural(dados):
     df = pd.concat([df, nova_linha], ignore_index=True)
     df.to_csv(arquivo_mural, index=False)
 
+# --- FUNÇÃO PARA DEFINIR AVATAR (Simplificada) ---
+def obter_avatar_simples(nome):
+    if nome.startswith("Vereadora"):
+        return "👩"
+    else:
+        return "👨"
+# --------------------------------------------------
+
 # --- MENU LATERAL ---
 if os.path.exists("brasao.png"):
     st.sidebar.image("brasao.png", width=120)
@@ -188,14 +196,6 @@ elif modo == "👤 Gabinete Virtual":
     
     vereador_selecionado = st.selectbox("Selecione um vereador para ver o perfil completo ou veja o Feed Geral abaixo:", ["Selecione..."] + LISTA_VEREADORES)
     
-    # --- Lógica de AVATAR ---
-    def obter_avatar(nome):
-        if nome.startswith("Vereadora"):
-            return "👩‍⚖️" # Emoji Juíza/Advogada
-        else:
-            return "👨‍💼" # Emoji Homem de Negócios
-    # -----------------------
-
     # --- MODO 1: FEED GERAL ---
     if vereador_selecionado == "Selecione...":
         st.divider()
@@ -209,7 +209,7 @@ elif modo == "👤 Gabinete Virtual":
                 for index, row in ultimas_postagens.iterrows():
                     with st.container(border=True):
                         # Define avatar para o feed geral
-                        avatar_feed = obter_avatar(row['Vereador'])
+                        avatar_feed = obter_avatar_simples(row['Vereador'])
 
                         col_avatar, col_texto = st.columns([1, 6])
                         with col_avatar:
@@ -223,17 +223,17 @@ elif modo == "👤 Gabinete Virtual":
             else:
                 st.info("Ainda não há publicações no mural.")
         else:
-            st.info("Ainda não há publicações no mural.")
+            st.info("Mural ainda não foi iniciado.")
 
     # --- MODO 2: PERFIL INDIVIDUAL ---
     else:
-        avatar_perfil = obter_avatar(vereador_selecionado) # Usa a função para o perfil individual
+        avatar_perfil = obter_avatar_simples(vereador_selecionado) # Usa a função para o perfil individual
 
         st.divider()
         col_foto, col_info = st.columns([1, 3])
         
         with col_foto:
-            # Usa o avatar definido acima no tamanho grande
+            # Usa o avatar definido acima no tamanho grande, sem customização complexa
             st.markdown(f"<div style='font-size: 100px; text-align: center;'>{avatar_perfil}</div>", unsafe_allow_html=True)
         
         with col_info:
