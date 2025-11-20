@@ -84,11 +84,9 @@ st.sidebar.caption("© 2025 Câmara de Espumoso")
 
 # --- TELA: INÍCIO ---
 if modo == "🏠 Início":
-    col1, col2 = st.columns([1, 3])
-    with col2:
-        st.title("Assistente Virtual Legislativo") # Título Novo
-        st.write("Bem-vindo ao sistema inteligente de apoio ao mandato parlamentar.")
-        st.info("👈 Utilize o menu lateral para navegar entre as ferramentas.")
+    st.title("Assistente Virtual Legislativo")
+    st.write("Bem-vindo ao sistema inteligente de apoio ao mandato parlamentar.")
+    st.info("👈 Utilize o menu lateral para navegar entre as ferramentas.")
 
 # --- TELA: ASSISTENTE DE PROPOSIÇÕES (IA) ---
 elif modo == "⚖️ Assistente de Proposições (com IA)":
