@@ -88,28 +88,31 @@ st.sidebar.caption("Desenvolvido por:")
 st.sidebar.markdown("**Daniel de Oliveira Colvero**")
 st.sidebar.caption("© 2025 Câmara de Espumoso")
 
-# --- TELA: INÍCIO (AGORA COM BOTÕES GRANDES) ---
+# --- TELA: INÍCIO (COM CORREÇÃO DO ERRO) ---
 if modo == "🏠 Início":
     st.title("Assistente Virtual Legislativo")
     st.write("Bem-vindo! Toque em uma das opções abaixo para começar:")
     st.divider()
 
-    # Cria duas colunas para os botões não ficarem gigantes
+    # Funções "Ajudantes" para mudar a página sem dar erro
+    def ir_para_assistente():
+        st.session_state.navegacao = "⚖️ Assistente de Proposições (com IA)"
+        
+    def ir_para_ideias():
+        st.session_state.navegacao = "💡 Banco de Ideias"
+
+    # Cria duas colunas para os botões
     col_a, col_b = st.columns(2)
     
     with col_a:
-        # Botão para o Assistente
         st.info("🤖 Para Vereadores e Assessores")
-        if st.button("Criar Documento / Lei 📝", use_container_width=True):
-            st.session_state["navegacao"] = "⚖️ Assistente de Proposições (com IA)"
-            st.rerun() # Recarrega a página indo pro destino
+        # O segredo está no on_click=ir_para_assistente
+        st.button("Criar Documento / Lei 📝", use_container_width=True, on_click=ir_para_assistente)
             
     with col_b:
-        # Botão para o Banco de Ideias
         st.success("💡 Para a Comunidade")
-        if st.button("Enviar uma Ideia / Sugestão 🚀", use_container_width=True):
-            st.session_state["navegacao"] = "💡 Banco de Ideias"
-            st.rerun() # Recarrega a página indo pro destino
+        # O segredo está no on_click=ir_para_ideias
+        st.button("Enviar uma Ideia / Sugestão 🚀", use_container_width=True, on_click=ir_para_ideias)
 
     st.divider()
     st.caption("Ou utilize o menu lateral (seta no canto superior esquerdo) para mais opções.")
