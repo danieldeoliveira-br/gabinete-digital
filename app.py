@@ -173,7 +173,7 @@ if modo == "🏠 Início":
         st.button("Enviar Ideia / Sugestão 🚀", use_container_width=True, on_click=ir_para_ideias)
 
     with col_c:
-        st.warning("🏛️ Mural dos Vereadores")
+        st.warning("🏛️ Gabinetes")
         st.button("Visitar Gabinete Virtual 👤", use_container_width=True, on_click=ir_para_gabinete)
 
     st.divider()
@@ -188,6 +188,14 @@ elif modo == "👤 Gabinete Virtual":
     
     vereador_selecionado = st.selectbox("Selecione um vereador para ver o perfil completo ou veja o Feed Geral abaixo:", ["Selecione..."] + LISTA_VEREADORES)
     
+    # --- Lógica de AVATAR ---
+    def obter_avatar(nome):
+        if nome.startswith("Vereadora"):
+            return "👩‍⚖️" # Emoji Juíza/Advogada
+        else:
+            return "👨‍💼" # Emoji Homem de Negócios
+    # -----------------------
+
     # --- MODO 1: FEED GERAL ---
     if vereador_selecionado == "Selecione...":
         st.divider()
@@ -201,10 +209,7 @@ elif modo == "👤 Gabinete Virtual":
                 for index, row in ultimas_postagens.iterrows():
                     with st.container(border=True):
                         # Define avatar para o feed geral
-                        if row['Vereador'].startswith("Vereadora"):
-                            avatar_feed = "👩"
-                        else:
-                            avatar_feed = "👨"
+                        avatar_feed = obter_avatar(row['Vereador'])
 
                         col_avatar, col_texto = st.columns([1, 6])
                         with col_avatar:
@@ -222,11 +227,7 @@ elif modo == "👤 Gabinete Virtual":
 
     # --- MODO 2: PERFIL INDIVIDUAL ---
     else:
-        # Lógica para definir o avatar grande
-        if vereador_selecionado.startswith("Vereadora"):
-            avatar_perfil = "👩"
-        else:
-            avatar_perfil = "👨"
+        avatar_perfil = obter_avatar(vereador_selecionado) # Usa a função para o perfil individual
 
         st.divider()
         col_foto, col_info = st.columns([1, 3])
