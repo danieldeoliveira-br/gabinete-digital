@@ -11,7 +11,7 @@ st.set_page_config(page_title="Gabinete Digital", page_icon="🏛️", layout="w
 try:
     api_key = st.secrets["GROQ_API_KEY"]
 except:
-    api_key = "" 
+    api_key = ""
 
 # --- FUNÇÃO: REDATOR IA ---
 def gerar_documento_ia(tipo_doc, assunto):
@@ -51,7 +51,6 @@ arquivo_ideias = "banco_de_ideias.csv"
 
 def salvar_ideia(dados):
     if not os.path.exists(arquivo_ideias):
-        # Cria o arquivo com as colunas novas (incluindo Contato)
         df = pd.DataFrame(columns=[
             "Data", "Nome", "Contato", "Ideia", "Contribuição", 
             "Localização", "Áreas", "Idade", "Vereador Destino", "Concordou Termos"
@@ -70,11 +69,9 @@ if os.path.exists("brasao.png"):
 st.sidebar.title("Gabinete Digital")
 st.sidebar.markdown("---")
 
-# Inicializa a navegação se não existir
 if "navegacao" not in st.session_state:
     st.session_state["navegacao"] = "🏠 Início"
 
-# Menu Dropdown
 modo = st.sidebar.selectbox(
     "Selecione a ferramenta:", 
     ["🏠 Início", "⚖️ Assistente de Proposições (com IA)", "💡 Banco de Ideias"],
@@ -92,7 +89,6 @@ if modo == "🏠 Início":
     st.write("Bem-vindo! Toque em uma das opções abaixo para começar:")
     st.divider()
 
-    # Funções para os botões grandes
     def ir_para_assistente():
         st.session_state.navegacao = "⚖️ Assistente de Proposições (com IA)"
         
@@ -114,22 +110,22 @@ if modo == "🏠 Início":
 # --- TELA: ASSISTENTE DE PROPOSIÇÕES (RESTRITA) ---
 elif modo == "⚖️ Assistente de Proposições (com IA)":
     
-    # Botão Voltar
     def voltar_inicio():
         st.session_state.navegacao = "🏠 Início"
+        
     st.button("⬅️ Voltar para o Início", on_click=voltar_inicio, key="voltar_assistente")
 
-    # Controle de Acesso
     if "acesso_vereador" not in st.session_state:
         st.session_state["acesso_vereador"] = False
 
     if not st.session_state["acesso_vereador"]:
         st.header("🔒 Acesso Restrito")
         st.warning("Esta ferramenta é exclusiva para Vereadores e Assessores.")
+        
         senha_digitada = st.text_input("Digite a senha de acesso:", type="password")
         
         if st.button("Entrar"):
-            if senha_digitada == "camara2025": # <--- SUA SENHA AQUI
+            if senha_digitada == "camara2025": 
                 st.session_state["acesso_vereador"] = True
                 st.rerun()
             else:
@@ -163,9 +159,9 @@ elif modo == "⚖️ Assistente de Proposições (com IA)":
 # --- TELA: BANCO DE IDEIAS (PÚBLICA) ---
 elif modo == "💡 Banco de Ideias":
     
-    # Botão Voltar
     def voltar_inicio():
         st.session_state.navegacao = "🏠 Início"
+        
     st.button("⬅️ Voltar para o Início", on_click=voltar_inicio, key="voltar_ideias")
 
     st.header("💡 Banco de Ideias da Comunidade")
@@ -174,7 +170,6 @@ elif modo == "💡 Banco de Ideias":
         st.subheader("1. Sobre Você")
         nome = st.text_input("Seu nome completo:")
         contato = st.text_input("Seu WhatsApp/Celular (Opcional):", placeholder="(54) 99999-9999")
-        
         idade = st.radio("Qual a sua idade?", ["-18", "18-30", "31-45", "46-60", "60+"], horizontal=True)
 
         st.markdown("---")
@@ -185,3 +180,59 @@ elif modo == "💡 Banco de Ideias":
         areas = st.multiselect("Áreas:", ["Saúde", "Educação", "Obras", "Lazer", "Segurança", "Trânsito", "Outros"])
 
         st.markdown("---")
+        st.subheader("3. Destino")
+        vereador = st.selectbox("Para qual vereador?", [
+            "Escolha um vereador...",
+            "Vereadora Dayana Soares de Camargo (PDT)",
+            "Vereador Denner Fernando Duarte Senhor (PL)",
+            "Vereador Eduardo Signor (União Brasil)",
+            "Vereadora Fabiana Dolci Otoni (PP)",
+            "Vereadora Ivone Maria Capitanio Missio (PP)",
+            "Vereador Leandro Keller Colleraus (PDT)",
+            "Vereador Marina Machado (PL)",
+            "Vereador Paulo Flores de Moraes (PDT)",
+            "Vereador Tomas Fiuza (PP)"
+        ])
+
+        st.markdown("---")
+        termos = st.checkbox("Eu li e concordo com os termos.")
+        
+        if st.form_submit_button("🚀 Enviar Sugestão"):
+            if not termos:
+                st.error("Aceite os termos para enviar.")
+            elif not ideia_desc:
+                st.error("Descreva sua ideia.")
+            elif vereador == "Escolha um vereador...":
+                st.error("Escolha um vereador.")
+            else:
+                dados_salvar = {
+                    "Data": datetime.now().strftime("%d/%m/%Y %H:%M"),
+                    "Nome": nome,
+                    "Contato": contato,
+                    "Ideia": ideia_desc,
+                    "Contribuição": contribuição,
+                    "Localização": localizacao,
+                    "Áreas": ", ".join(areas),
+                    "Idade": idade,
+                    "Vereador Destino": vereador,
+                    "Concordou Termos": "Sim"
+                }
+                salvar_ideia(dados_salvar)
+                st.balloons()
+                st.success("Ideia enviada com sucesso!")
+
+    st.divider()
+    st.subheader("🔐 Área Administrativa")
+    senha = st.text_input("Senha ADM:", type="password")
+    
+    if senha == "admin123":
+        st.success("Acesso Liberado!")
+        if os.path.exists(arquivo_ideias):
+            df = pd.read_csv(arquivo_ideias)
+            st.dataframe(df, use_container_width=True)
+            csv = df.to_csv(index=False).encode('utf-8')
+            st.download_button("📥 Baixar Relatório", data=csv, file_name="ideias.csv", mime="text/csv")
+        else:
+            st.info("Nenhuma ideia ainda.")
+    elif senha:
+        st.error("Senha incorreta.")
