@@ -13,7 +13,7 @@ try:
 except:
     api_key = ""
 
-# --- LISTA DE VEREADORES (CONFIGURAÇÃO) ---
+# --- LISTA DE VEREADORES ---
 LISTA_VEREADORES = [
     "Vereadora Dayana Soares de Camargo (PDT)",
     "Vereador Denner Fernando Duarte Senhor (PL)",
@@ -26,56 +26,70 @@ LISTA_VEREADORES = [
     "Vereador Tomas Fiuza (PROGRESSISTAS)"
 ]
 
-# --- FUNÇÃO: REDATOR IA (AGORA RECEBE O AUTOR) ---
+# --- FUNÇÃO: REDATOR IA (AGORA COM TÉCNICA LEGISLATIVA) ---
 def gerar_documento_ia(autor, tipo_doc, assunto):
     if not api_key:
         return "⚠️ ERRO: A chave da API não foi encontrada nos Secrets!"
     
     client = Groq(api_key=api_key)
     
-    # Regras específicas para evitar Vício de Iniciativa
+    # Regras de Conteúdo e Técnica Legislativa
     if tipo_doc == "Projeto de Lei":
-        instrucao_extra = """
-        ESTRUTURA DE LEI:
-        - Artigos numerados (Art. 1º, Art. 2º...).
-        - Artigo final: 'Esta Lei entra em vigor na data de sua publicação.'
-        
-        ⚠️ REGRA DE OURO (VÍCIO DE INICIATIVA):
-        - Vereadores NÃO podem criar despesas diretas para a Prefeitura nem mexer em órgãos públicos.
-        - Se o assunto for obra, serviço ou gestão, redija como 'Autorização' ('Fica o Poder Executivo AUTORIZADO a...').
-        - Inclua o artigo: 'As despesas decorrentes desta Lei correrão por conta de dotações orçamentárias próprias.'
+        regras_especificas = """
+        TÉCNICA LEGISLATIVA (OBRIGATÓRIO):
+        1. O texto da lei deve vir IMEDIATAMENTE após a Ementa.
+        2. Use Artigos (Art. 1º, Art. 2º...), Parágrafos (§ 1º) e Incisos (I, II).
+        3. Linguagem: Formal, Impessoal e Imperativa.
+        4. VÍCIO DE INICIATIVA: Se o assunto gerar despesa ou envolver gestão interna da prefeitura, use 'Fica o Poder Executivo AUTORIZADO a instituir...'.
+        5. CLÁUSULAS PADRÃO:
+           - Penúltimo Artigo: 'O Poder Executivo regulamentará a presente Lei no que couber.'
+           - Último Artigo: 'Esta Lei entra em vigor na data de sua publicação.'
         """
     else:
-        instrucao_extra = """
-        ESTRUTURA DE TEXTO CORRIDO:
-        - Sem artigos. Use parágrafos.
-        - Seja direto: Diga o problema e a solução sugerida.
+        regras_especificas = """
+        ESTRUTURA DE TEXTO CORRIDO (Para Indicações/Pedidos):
+        1. Inicie com: 'O Vereador que este subscreve, no uso de suas atribuições legais...'
+        2. Texto corrido, sem artigos.
+        3. Seja direto na solicitação.
         """
 
     prompt = f"""
-    Atue como um Assessor Jurídico Sênior da Câmara Municipal de Espumoso/RS.
-    Redija uma minuta profissional de: {tipo_doc}.
+    Atue como um Procurador Jurídico Sênior da Câmara Municipal de Espumoso/RS.
+    Redija uma minuta de {tipo_doc} com alto rigor técnico.
     
-    AUTOR DA PROPOSIÇÃO: {autor}.
+    AUTOR: {autor}.
     ASSUNTO: {assunto}.
     
-    REGRAS DE FORMATAÇÃO:
-    1. NÃO use negrito (**) no corpo do texto.
-    2. Cabeçalho Oficial: "EXCELENTÍSSIMO SENHOR PRESIDENTE DA CÂMARA MUNICIPAL DE ESPUMOSO – RS".
-    3. INÍCIO DO TEXTO (OBRIGATÓRIO): Comece exatamente com: "{autor}, no uso de suas atribuições legais e regimentais, submete à apreciação do Plenário o seguinte {tipo_doc.upper()}:"
-    4. Ementa: Curta e em caixa alta.
-    5. Justificativa: 3 parágrafos (Problema, Solução, Benefício Público).
-    6. Fechamento: "Espumoso, [Data de Hoje]." e espaço para assinatura com o nome ({autor}).
+    ORDEM OBRIGATÓRIA DO DOCUMENTO (NÃO INVERTA):
     
-    REGRAS DE CONTEÚDO:
-    {instrucao_extra}
+    1. CABEÇALHO: "EXCELENTÍSSIMO SENHOR PRESIDENTE DA CÂMARA MUNICIPAL DE ESPUMOSO – RS"
+    
+    2. PREÂMBULO: "{autor}, integrante da Bancada [Extrair Partido], no uso de suas atribuições legais e regimentais, submete à apreciação do Plenário o seguinte {tipo_doc.upper()}:"
+    
+    3. EMENTA: (Resumo do assunto em caixa alta, negrito e centralizado).
+    
+    4. TEXTO DA PROPOSIÇÃO (AQUI ENTRAM OS ARTIGOS OU O PEDIDO):
+       {regras_especificas}
+    
+    5. JUSTIFICATIVA (SOMENTE DEPOIS DO TEXTO DA LEI):
+       Título: "JUSTIFICATIVA"
+       Escreva um texto dissertativo-argumentativo formal defendendo a proposta.
+       Foque na relevância social, jurídica e no interesse público.
+    
+    6. FECHAMENTO:
+       "Sala das Sessões, Espumoso – RS, [Data de Hoje]."
+       (Espaço para assinatura)
+       {autor}
+       Vereador(a)
+       
+    IMPORTANTE: Não use markdown de negrito (**) no corpo dos artigos para facilitar a formatação no Word.
     """
     
     try:
         chat_completion = client.chat.completions.create(
             messages=[{"role": "user", "content": prompt}],
             model="llama-3.3-70b-versatile",
-            temperature=0.3
+            temperature=0.2 # Temperatura baixa para ser mais "formal/chato"
         )
         return chat_completion.choices[0].message.content
     except Exception as e:
@@ -103,7 +117,6 @@ if os.path.exists("brasao.png"):
 
 st.sidebar.title("Gabinete Digital")
 
-# Informações da Câmara
 st.sidebar.markdown("**Câmara Municipal de Espumoso**")
 st.sidebar.markdown("Rio Grande do Sul")
 st.sidebar.markdown("[🌐 Site Oficial](https://www.camaraespumoso.rs.gov.br)")
@@ -179,9 +192,7 @@ elif modo == "⚖️ Assistente de Proposições (com IA)":
         st.header("⚖️ Elaboração de Documentos")
         st.write("Preencha os dados abaixo e deixe a IA redigir a minuta.")
         
-        # --- SELEÇÃO DO VEREADOR (CAMPO NOVO) ---
         autor_selecionado = st.selectbox("Autor da Proposição:", LISTA_VEREADORES)
-        # ----------------------------------------
 
         tipo_doc = st.selectbox(
             "Tipo de Proposição", 
@@ -189,15 +200,14 @@ elif modo == "⚖️ Assistente de Proposições (com IA)":
         )
         
         if tipo_doc == "Projeto de Lei":
-            st.warning("⚠️ Atenção: Vereadores não podem criar despesas diretas (Vício de Iniciativa). A IA tentará criar uma lei 'Autorizativa' se necessário.")
+            st.warning("⚠️ Atenção: A IA tentará evitar Vício de Iniciativa criando leis 'Autorizativas' quando necessário.")
         
         st.info("💡 Dica: Quanto mais detalhes, melhor o texto final!")
         texto_input = st.text_area("Detalhamento da solicitação:", height=150)
         
         if st.button("📝 Elaborar Proposição"):
             if texto_input:
-                with st.spinner('Redigindo documento...'):
-                    # Agora passamos o AUTOR para a função
+                with st.spinner('Redigindo documento com rigor técnico...'):
                     texto_final = gerar_documento_ia(autor_selecionado, tipo_doc, texto_input)
                     st.subheader("Minuta Gerada:")
                     st.text_area("Texto para Copiar:", value=texto_final, height=500)
@@ -229,7 +239,6 @@ elif modo == "💡 Banco de Ideias":
 
         st.markdown("---")
         st.subheader("3. Destino")
-        # Usa a mesma lista de vereadores pra manter padrão
         vereador = st.selectbox("Para qual vereador?", ["Escolha um vereador..."] + LISTA_VEREADORES)
 
         st.markdown("---")
