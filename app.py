@@ -72,10 +72,15 @@ if os.path.exists("brasao.png"):
 st.sidebar.title("Gabinete Digital")
 st.sidebar.markdown("---")
 
-# --- MENU LATERAL (AGORA COMO LISTA SUSPENSA) ---
+# --- MENU LATERAL (COM CHAVE DE CONTROLE) ---
+# Se não tiver nada na memória ainda, começa no Início
+if "navegacao" not in st.session_state:
+    st.session_state["navegacao"] = "🏠 Início"
+
 modo = st.sidebar.selectbox(
     "Selecione a ferramenta:", 
-    ["🏠 Início", "⚖️ Assistente de Proposições (com IA)", "💡 Banco de Ideias"]
+    ["🏠 Início", "⚖️ Assistente de Proposições (com IA)", "💡 Banco de Ideias"],
+    key="navegacao" # ISSO AQUI É O SEGREDO pra conectar com os botões
 )
 
 st.sidebar.markdown("---")
@@ -83,11 +88,31 @@ st.sidebar.caption("Desenvolvido por:")
 st.sidebar.markdown("**Daniel de Oliveira Colvero**")
 st.sidebar.caption("© 2025 Câmara de Espumoso")
 
-# --- TELA: INÍCIO ---
+# --- TELA: INÍCIO (AGORA COM BOTÕES GRANDES) ---
 if modo == "🏠 Início":
     st.title("Assistente Virtual Legislativo")
-    st.write("Bem-vindo ao sistema inteligente de apoio ao mandato parlamentar.")
-    st.info("👈 Utilize o menu lateral para navegar entre as ferramentas.")
+    st.write("Bem-vindo! Toque em uma das opções abaixo para começar:")
+    st.divider()
+
+    # Cria duas colunas para os botões não ficarem gigantes
+    col_a, col_b = st.columns(2)
+    
+    with col_a:
+        # Botão para o Assistente
+        st.info("🤖 Para Vereadores e Assessores")
+        if st.button("Criar Documento / Lei 📝", use_container_width=True):
+            st.session_state["navegacao"] = "⚖️ Assistente de Proposições (com IA)"
+            st.rerun() # Recarrega a página indo pro destino
+            
+    with col_b:
+        # Botão para o Banco de Ideias
+        st.success("💡 Para a Comunidade")
+        if st.button("Enviar uma Ideia / Sugestão 🚀", use_container_width=True):
+            st.session_state["navegacao"] = "💡 Banco de Ideias"
+            st.rerun() # Recarrega a página indo pro destino
+
+    st.divider()
+    st.caption("Ou utilize o menu lateral (seta no canto superior esquerdo) para mais opções.")
 
 # --- TELA: ASSISTENTE DE PROPOSIÇÕES (IA) ---
 elif modo == "⚖️ Assistente de Proposições (com IA)":
