@@ -114,10 +114,61 @@ if modo == "🏠 Início":
     st.divider()
     st.caption("Ou utilize o menu lateral (seta no canto superior esquerdo) para mais opções.")
 
-# --- TELA: ASSISTENTE DE PROPOSIÇÕES (IA) ---
+# --- TELA: ASSISTENTE DE PROPOSIÇÕES (COM SENHA) ---
 elif modo == "⚖️ Assistente de Proposições (com IA)":
-    st.header("⚖️ Elaboração de Documentos Legislativos")
-    st.write("Preencha os dados abaixo e deixe a Inteligência Artificial redigir a minuta inicial.")
+    
+    # Verifica se já está logado na sessão
+    if "acesso_vereador" not in st.session_state:
+        st.session_state["acesso_vereador"] = False
+
+    # Se NÃO estiver logado, mostra a tela de bloqueio
+    if not st.session_state["acesso_vereador"]:
+        st.header("🔒 Acesso Restrito")
+        st.warning("Esta ferramenta é exclusiva para Vereadores e Assessores.")
+        
+        senha_digitada = st.text_input("Digite a senha de acesso:", type="password")
+        
+        if st.button("Entrar"):
+            # --- DEFINA A SENHA AQUI ---
+            if senha_digitada == "camara@9": 
+                st.session_state["acesso_vereador"] = True
+                st.rerun() # Atualiza a página pra liberar
+            else:
+                st.error("Senha incorreta.")
+                
+    # Se JÁ estiver logado, mostra a ferramenta normal
+    else:
+        # Botãozinho discreto pra sair (Logout)
+        if st.button("Sair do Modo Restrito", type="secondary"):
+            st.session_state["acesso_vereador"] = False
+            st.rerun()
+            
+        st.divider()
+        st.header("⚖️ Elaboração de Documentos Legislativos")
+        st.write("Preencha os dados abaixo e deixe a Inteligência Artificial redigir a minuta inicial.")
+        
+        tipo_doc = st.selectbox(
+            "Tipo de Proposição", 
+            ["Pedido de Providência", "Pedido de Informação", "Indicação", "Projeto de Lei", "Moção de Aplauso", "Moção de Pesar"]
+        )
+        
+        st.info("💡 **Dica:** Escreva aqui qual o problema, como vc imagina a solução e quais os motivos da sua solicitação. Quanto mais detalhes, melhor!")
+        
+        texto_input = st.text_area(
+            "Detalhamento da solicitação:", 
+            height=150, 
+            placeholder="Ex: Solicito informações sobre o custo da obra na rua X, pois a comunidade relata paralisação..."
+        )
+        
+        if st.button("📝 Elaborar Proposição"):
+            if texto_input:
+                with st.spinner('A IA está consultando as leis e redigindo o texto...'):
+                    texto_final = gerar_documento_ia(tipo_doc, texto_input)
+                    st.subheader("Minuta Gerada:")
+                    st.success("Documento criado com sucesso! Copie abaixo:")
+                    st.text_area("Texto para Copiar:", value=texto_final, height=500)
+            else:
+                st.warning("Por favor, descreva a situação antes de pedir para elaborar.")
     
     # Lista atualizada com Pedido de Informação
     tipo_doc = st.selectbox(
