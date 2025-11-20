@@ -26,14 +26,13 @@ LISTA_VEREADORES = [
     "Vereador Tomas Fiuza (PROGRESSISTAS)"
 ]
 
-# --- FUNÇÃO: REDATOR IA (AGORA COM TÉCNICA LEGISLATIVA) ---
+# --- FUNÇÃO: REDATOR IA ---
 def gerar_documento_ia(autor, tipo_doc, assunto):
     if not api_key:
         return "⚠️ ERRO: A chave da API não foi encontrada nos Secrets!"
     
     client = Groq(api_key=api_key)
     
-    # Regras de Conteúdo e Técnica Legislativa
     if tipo_doc == "Projeto de Lei":
         regras_especificas = """
         TÉCNICA LEGISLATIVA (OBRIGATÓRIO):
@@ -82,14 +81,14 @@ def gerar_documento_ia(autor, tipo_doc, assunto):
        {autor}
        Vereador(a)
        
-    IMPORTANTE: Não use markdown de negrito (**) no corpo dos artigos para facilitar a formatação no Word.
+    IMPORTANTE: Não use markdown de negrito (**) no corpo dos artigos.
     """
     
     try:
         chat_completion = client.chat.completions.create(
             messages=[{"role": "user", "content": prompt}],
             model="llama-3.3-70b-versatile",
-            temperature=0.2 # Temperatura baixa para ser mais "formal/chato"
+            temperature=0.2
         )
         return chat_completion.choices[0].message.content
     except Exception as e:
@@ -222,35 +221,95 @@ elif modo == "💡 Banco de Ideias":
         
     st.button("⬅️ Voltar para o Início", on_click=voltar_inicio, key="voltar_ideias")
 
-    st.header("💡 Banco de Ideias da Comunidade")
+    # --- CABEÇALHO EXPLICATIVO (IGUAL AO GOOGLE FORMS) ---
+    st.title("Banco de Ideias - Espumoso/RS")
     
+    st.info("""
+    **Bem-vindo(a) ao Banco de Ideias da Câmara de Espumoso!**
+    Este é o seu canal direto para enviar PROPOSTAS e SUGESTÕES CONSTRUTIVAS focadas em melhorar a nossa cidade.
+    """)
+    
+    with st.expander("ℹ️ PARA QUE SERVE ESTE FORMULÁRIO (Clique para ler)"):
+        st.markdown("""
+        Use este espaço para enviar IDEIAS de competência MUNICIPAL, tais como:
+        * **Sugestões** para novos Projetos de Lei municipais.
+        * **Indicações** (Ex: "Pedir a instalação de um quebra-molas na frente da escola Y").
+        * **Pedidos de Providência** (Ex: "Solicitar o conserto do buraco na Rua X").
+        
+        **IMPORTANTE: FOCO EM ESPUMOSO**
+        Este formulário NÃO é o canal para manifestações gerais sobre política, nem para Reclamações ou Denúncias (para estes, use o canal de Ouvidoria).
+        Se você tem uma IDEIA ou SUGESTÃO para Espumoso, você está no lugar certo!
+        """)
+    
+    st.divider()
+
     with st.form("form_ideia_completo", clear_on_submit=True):
+        
+        # --- DADOS PESSOAIS ---
         st.subheader("1. Sobre Você")
-        nome = st.text_input("Seu nome completo:")
-        contato = st.text_input("Seu WhatsApp/Celular (Opcional):", placeholder="(54) 99999-9999")
-        idade = st.radio("Qual a sua idade?", ["-18", "18-30", "31-45", "46-60", "60+"], horizontal=True)
-
-        st.markdown("---")
+        nome = st.text_input("Seu nome completo:", help="Precisamos dos seus dados apenas para que o Vereador possa, se necessário, entrar em contato para entender melhor a sua ideia. Seus dados estarão protegidos.")
+        contato = st.text_input("Seu número de celular:")
+        
+        # --- DADOS DA IDEIA ---
         st.subheader("2. Sua Ideia")
-        ideia_desc = st.text_area("Descreva sua sugestão/ideia:", height=100)
-        contribuição = st.text_area("Como isso contribui para a comunidade?", height=100)
-        localizacao = st.text_input("Localização:")
-        areas = st.multiselect("Áreas:", ["Saúde", "Educação", "Obras", "Lazer", "Segurança", "Trânsito", "Outros"])
+        ideia_desc = st.text_area(
+            "Descreva sua sugestão/ideia:", 
+            height=150,
+            help='Dica: Não se preocupe em escrever bonito. Apenas nos diga o que você gostaria que fosse feito. Ex: "Sugiro colocar um quebra-molas na Rua X..." ou "Aulas de violão no bairro Y..."'
+        )
+        
+        contribuição = st.text_area(
+            "Como isso pode contribuir para a comunidade?", 
+            height=100,
+            help='Dica: Nos diga por que sua ideia é importante. Ex: "Isso evitaria acidentes com as crianças..." ou "Ajudaria a tirar os jovens da rua..."'
+        )
+        
+        localizacao = st.text_input(
+            "Localização:",
+            help='Dica: Nos diga onde o problema está. Ex: "No bairro Centro, na Rua...", "Em frente à Praça...", "Próximo ao número X..."'
+        )
+        
+        # --- ÁREAS ---
+        st.markdown("**Em qual(is) área(s) você acha que sua ideia pode melhorar?**")
+        st.caption("Pode marcar mais de uma! Isso nos ajuda a organizar todas as ideias recebidas.")
+        areas = st.multiselect("Selecione as áreas:", [
+            "Agricultura e Zona Rural", "Cultura e Lazer", "Educação", 
+            "Empregabilidade", "Infraestrutura", "Meio Ambiente", 
+            "Mobilidade Urbana", "Saúde", "Segurança", "Tecnologia", "Trânsito"
+        ])
 
         st.markdown("---")
+        
+        # --- IDADE ---
+        st.markdown("**Qual a sua idade?**")
+        st.caption("Esta informação nos ajuda muito para estatística (de forma anônima), para sabermos se as necessidades dos mais jovens são diferentes das necessidades dos mais experientes.")
+        idade = st.radio("Faixa etária:", ["Menos de 18 anos", "18 a 30 anos", "31 a 45 anos", "46 a 60 anos", "Acima de 60 anos"], horizontal=True)
+
+        st.markdown("---")
+        
+        # --- DESTINO ---
         st.subheader("3. Destino")
-        vereador = st.selectbox("Para qual vereador?", ["Escolha um vereador..."] + LISTA_VEREADORES)
+        st.markdown("**Enviar sugestão para qual vereador(a)?**")
+        st.caption("A Secretaria da Câmara vai receber sua ideia e encaminhá-la ao vereador que você selecionar.")
+        vereador = st.selectbox("Escolha o vereador:", ["Escolha um vereador..."] + LISTA_VEREADORES)
 
         st.markdown("---")
-        termos = st.checkbox("Eu li e concordo com os termos.")
+        
+        # --- TERMOS ---
+        st.caption("""
+        Ao enviar sua sugestão, você concorda que ela será analisada.
+        Você confirma que sua proposta é uma sugestão construtiva focada em Espumoso.
+        O envio não garante a implementação da ideia.
+        """)
+        termos = st.checkbox("Eu li e concordo com os termos e o foco desta ferramenta.")
         
         if st.form_submit_button("🚀 Enviar Sugestão"):
             if not termos:
-                st.error("Aceite os termos para enviar.")
+                st.error("Você precisa concordar com os termos para enviar.")
             elif not ideia_desc:
-                st.error("Descreva sua ideia.")
+                st.error("Por favor, descreva sua ideia.")
             elif vereador == "Escolha um vereador...":
-                st.error("Escolha um vereador.")
+                st.error("Por favor, escolha um vereador para receber a ideia.")
             else:
                 dados_salvar = {
                     "Data": datetime.now().strftime("%d/%m/%Y %H:%M"),
@@ -266,7 +325,7 @@ elif modo == "💡 Banco de Ideias":
                 }
                 salvar_ideia(dados_salvar)
                 st.balloons()
-                st.success("Ideia enviada com sucesso!")
+                st.success("Sua ideia foi enviada com sucesso! Agradecemos sua participação.")
 
     st.divider()
     st.subheader("🔐 Área Administrativa")
