@@ -124,7 +124,7 @@ elif modo == "⚖️ Assistente de Proposições (com IA)":
     if "acesso_vereador" not in st.session_state:
         st.session_state["acesso_vereador"] = False
 
-    # Se NÃO estiver logado, mostra a tela de bloqueio
+    # Se NÃO estiver logado, mostra APENAS a tela de bloqueio
     if not st.session_state["acesso_vereador"]:
         st.header("🔒 Acesso Restrito")
         st.warning("Esta ferramenta é exclusiva para Vereadores e Assessores.")
@@ -133,13 +133,13 @@ elif modo == "⚖️ Assistente de Proposições (com IA)":
         
         if st.button("Entrar"):
             # --- DEFINA A SENHA AQUI ---
-            if senha_digitada == "camara@9": 
+            if senha_digitada == "camara2025": 
                 st.session_state["acesso_vereador"] = True
                 st.rerun() # Atualiza a página pra liberar
             else:
                 st.error("Senha incorreta.")
                 
-    # Se JÁ estiver logado, mostra a ferramenta normal
+    # Se JÁ estiver logado (ELSE), aí sim mostra a ferramenta
     else:
         # Botãozinho discreto pra sair (Logout)
         if st.button("Sair do Modo Restrito", type="secondary"):
@@ -172,31 +172,6 @@ elif modo == "⚖️ Assistente de Proposições (com IA)":
                     st.text_area("Texto para Copiar:", value=texto_final, height=500)
             else:
                 st.warning("Por favor, descreva a situação antes de pedir para elaborar.")
-    
-    # Lista atualizada com Pedido de Informação
-    tipo_doc = st.selectbox(
-        "Tipo de Proposição", 
-        ["Pedido de Providência", "Pedido de Informação", "Indicação", "Projeto de Lei", "Moção de Aplauso", "Moção de Pesar"]
-    )
-    
-    # Dica mais detalhada
-    st.info("💡 **Dica:** Escreva aqui qual o problema, como vc imagina a solução e quais os motivos da sua solicitação. Quanto mais detalhes, melhor!")
-    
-    texto_input = st.text_area(
-        "Detalhamento da solicitação:", 
-        height=150, 
-        placeholder="Ex: Solicito informações sobre o custo da obra na rua X, pois a comunidade relata paralisação..."
-    )
-    
-    if st.button("📝 Elaborar Proposição"): # Botão com nome novo
-        if texto_input:
-            with st.spinner('A IA está consultando as leis e redigindo o texto...'):
-                texto_final = gerar_documento_ia(tipo_doc, texto_input)
-                st.subheader("Minuta Gerada:")
-                st.success("Documento criado com sucesso! Copie abaixo:")
-                st.text_area("Texto para Copiar:", value=texto_final, height=500)
-        else:
-            st.warning("Por favor, descreva a situação antes de pedir para elaborar.")
 
 # --- TELA: BANCO DE IDEIAS (COMPLETO E NOVO) ---
 elif modo == "💡 Banco de Ideias":
