@@ -231,11 +231,36 @@ elif modo == "💡 Banco de Ideias":
                 st.success(f"Obrigado, {nome}! Sua ideia foi registrada e encaminhada para {vereador}.")
 
     # --- MOSTRAR DADOS (ADM) ---
+    # --- ÁREA RESTRITA DO ADMINISTRADOR 🔐 ---
     st.divider()
-    with st.expander("Ver estatísticas das ideias enviadas (Transparência)"):
+    st.subheader("🔐 Área Administrativa")
+    
+    # Campo de senha (o type="password" esconde as letras com bolinhas)
+    senha = st.text_input("Digite a senha de administrador para ver as ideias:", type="password")
+    
+    # CONFIGURE A SUA SENHA AQUI (Pode mudar "admin123" pelo que quiser)
+    SENHA_SECRETA = "camesp1955"
+    
+    if senha == SENHA_SECRETA:
+        st.success("Acesso Liberado!")
+        
         if os.path.exists(arquivo_ideias):
             df = pd.read_csv(arquivo_ideias)
+            
+            # Mostra a tabela só pra quem tem a senha
             st.dataframe(df, use_container_width=True)
-            st.metric("Total de Ideias", len(df))
+            st.metric("Total de Ideias Recebidas", len(df))
+            
+            # Botão para baixar a planilha pro teu computador
+            csv = df.to_csv(index=False).encode('utf-8')
+            st.download_button(
+                label="📥 Baixar Planilha Completa (Excel/CSV)",
+                data=csv,
+                file_name="relatorio_ideias_camara.csv",
+                mime="text/csv",
+            )
         else:
-            st.info("Nenhuma ideia registrada ainda.")
+            st.info("Nenhuma ideia registrada ainda no banco de dados.")
+            
+    elif senha:
+        st.error("Senha incorreta. Acesso negado.")
