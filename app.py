@@ -120,12 +120,11 @@ if modo == "🏠 Início":
 # --- TELA: ASSISTENTE DE PROPOSIÇÕES (COM SENHA) ---
 elif modo == "⚖️ Assistente de Proposições (com IA)":
     # --- BOTÃO VOLTAR ---
-    if st.button("⬅️ Voltar para o Início"):
-        st.session_state["navegacao"] = "🏠 Início"
-        st.rerun()
-    
-    # ... o resto do código continua aqui ...
+def voltar_inicio():
+        st.session_state.navegacao = "🏠 Início"
         
+    st.button("⬅️ Voltar para o Início", on_click=voltar_inicio)
+         
     # Verifica se já está logado na sessão
     if "acesso_vereador" not in st.session_state:
         st.session_state["acesso_vereador"] = False
@@ -181,12 +180,11 @@ elif modo == "⚖️ Assistente de Proposições (com IA)":
 
 # --- TELA: BANCO DE IDEIAS (COMPLETO E NOVO) ---
 elif modo == "💡 Banco de Ideias":
-    # --- BOTÃO VOLTAR ---
-    if st.button("⬅️ Voltar para o Início"):
-        st.session_state["navegacao"] = "🏠 Início"
-        st.rerun()
+    # --- BOTÃO VOLTAR (COM CORREÇÃO) ---
+    def voltar_inicio():
+        st.session_state.navegacao = "🏠 Início"
         
-        st.header("💡 Banco de Ideias da Comunidade")
+    st.button("⬅️ Voltar para o Início", key="voltar_ideias", on_click=voltar_inicio)
     st.markdown("Preencha o formulário abaixo para contribuir com o futuro de Espumoso.")
     
     with st.form("form_ideia_completo", clear_on_submit=True):
