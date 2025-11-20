@@ -120,10 +120,10 @@ if modo == "🏠 Início":
 # --- TELA: ASSISTENTE DE PROPOSIÇÕES (COM SENHA) ---
 elif modo == "⚖️ Assistente de Proposições (com IA)":
     # --- BOTÃO VOLTAR ---
-def voltar_inicio():
-        st.session_state.navegacao = "🏠 Início"
-        
-    st.button("⬅️ Voltar para o Início", on_click=voltar_inicio)
+    def voltar_inicio():
+            st.session_state.navegacao = "🏠 Início"
+            
+        st.button("⬅️ Voltar para o Início", on_click=voltar_inicio)
          
     # Verifica se já está logado na sessão
     if "acesso_vereador" not in st.session_state:
