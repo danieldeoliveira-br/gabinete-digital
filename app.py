@@ -71,7 +71,7 @@ st.sidebar.title("Gabinete Digital")
 # --- NOVAS INFORMAÇÕES DA CÂMARA ---
 st.sidebar.markdown("**Câmara Municipal de Espumoso**")
 st.sidebar.markdown("Rio Grande do Sul")
-st.sidebar.markdown("[www.camaraespumoso.rs.gov.br](https://www.camaraespumoso.rs.gov.br)")
+st.sidebar.markdown("[🌐 Site Oficial da Câmara](https://www.camaraespumoso.rs.gov.br)")
 st.sidebar.markdown("---")
 
 if "navegacao" not in st.session_state:
