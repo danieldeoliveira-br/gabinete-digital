@@ -131,6 +131,13 @@ modo = st.sidebar.selectbox(
 )
 
 st.sidebar.markdown("---")
+
+# --- BOTÃO DE WHATSAPP NOVO ---
+link_whatsapp = "https://wa.me/555433834488" 
+st.sidebar.link_button("💬 Falar no WhatsApp", link_whatsapp, type="primary")
+# ------------------------------
+
+st.sidebar.markdown("---")
 st.sidebar.caption("Desenvolvido por:")
 st.sidebar.markdown("[**Daniel de Oliveira Colvero**](mailto:daniel.colvero@gmail.com)")
 st.sidebar.caption("© 2025 Câmara de Espumoso")
@@ -150,12 +157,12 @@ if modo == "🏠 Início":
     col_a, col_b = st.columns(2)
     
     with col_a:
-        st.info("🤖 Para Vereadores e Assessores")
-        st.button("Criar Documento / Lei 📝", use_container_width=True, on_click=ir_para_assistente)
+        st.info("🤖 Para Vereadores")
+        st.button("Criar Lei / Documento 📝", use_container_width=True, on_click=ir_para_assistente)
             
     with col_b:
         st.success("💡 Para a Comunidade")
-        st.button("Enviar uma Ideia / Sugestão 🚀", use_container_width=True, on_click=ir_para_ideias)
+        st.button("Enviar Ideia / Sugestão 🚀", use_container_width=True, on_click=ir_para_ideias)
 
     st.divider()
 
@@ -189,7 +196,6 @@ elif modo == "⚖️ Assistente de Proposições (com IA)":
             
         st.divider()
         st.header("⚖️ Elaboração de Documentos")
-        st.write("Preencha os dados abaixo e deixe a IA redigir a minuta.")
         
         autor_selecionado = st.selectbox("Autor da Proposição:", LISTA_VEREADORES)
 
@@ -221,7 +227,6 @@ elif modo == "💡 Banco de Ideias":
         
     st.button("⬅️ Voltar para o Início", on_click=voltar_inicio, key="voltar_ideias")
 
-    # --- CABEÇALHO EXPLICATIVO (IGUAL AO GOOGLE FORMS) ---
     st.title("Banco de Ideias - Espumoso/RS")
     
     st.info("""
@@ -244,64 +249,35 @@ elif modo == "💡 Banco de Ideias":
     st.divider()
 
     with st.form("form_ideia_completo", clear_on_submit=True):
-        
-        # --- DADOS PESSOAIS ---
         st.subheader("1. Sobre Você")
         nome = st.text_input("Seu nome completo:", help="Precisamos dos seus dados apenas para que o Vereador possa, se necessário, entrar em contato para entender melhor a sua ideia. Seus dados estarão protegidos.")
         contato = st.text_input("Seu número de celular:")
         
-        # --- DADOS DA IDEIA ---
         st.subheader("2. Sua Ideia")
-        ideia_desc = st.text_area(
-            "Descreva sua sugestão/ideia:", 
-            height=150,
-            help='Dica: Não se preocupe em escrever bonito. Apenas nos diga o que você gostaria que fosse feito. Ex: "Sugiro colocar um quebra-molas na Rua X..." ou "Aulas de violão no bairro Y..."'
-        )
+        ideia_desc = st.text_area("Descreva sua sugestão/ideia:", height=150, help='Dica: Não se preocupe em escrever bonito. Ex: "Sugiro colocar um quebra-molas na Rua X..."')
+        contribuição = st.text_area("Como isso pode contribuir para a comunidade?", height=100, help='Dica: Nos diga por que sua ideia é importante.')
+        localizacao = st.text_input("Localização:", help='Dica: Nos diga onde o problema está.')
         
-        contribuição = st.text_area(
-            "Como isso pode contribuir para a comunidade?", 
-            height=100,
-            help='Dica: Nos diga por que sua ideia é importante. Ex: "Isso evitaria acidentes com as crianças..." ou "Ajudaria a tirar os jovens da rua..."'
-        )
-        
-        localizacao = st.text_input(
-            "Localização:",
-            help='Dica: Nos diga onde o problema está. Ex: "No bairro Centro, na Rua...", "Em frente à Praça...", "Próximo ao número X..."'
-        )
-        
-        # --- ÁREAS ---
         st.markdown("**Em qual(is) área(s) você acha que sua ideia pode melhorar?**")
-        st.caption("Pode marcar mais de uma! Isso nos ajuda a organizar todas as ideias recebidas.")
-        areas = st.multiselect("Selecione as áreas:", [
-            "Agricultura e Zona Rural", "Cultura e Lazer", "Educação", 
-            "Empregabilidade", "Infraestrutura", "Meio Ambiente", 
-            "Mobilidade Urbana", "Saúde", "Segurança", "Tecnologia", "Trânsito"
-        ])
+        st.caption("Pode marcar mais de uma!")
+        areas = st.multiselect("Selecione as áreas:", ["Agricultura e Zona Rural", "Cultura e Lazer", "Educação", "Empregabilidade", "Infraestrutura", "Meio Ambiente", "Mobilidade Urbana", "Saúde", "Segurança", "Tecnologia", "Trânsito"])
 
         st.markdown("---")
-        
-        # --- IDADE ---
         st.markdown("**Qual a sua idade?**")
-        st.caption("Esta informação nos ajuda muito para estatística (de forma anônima), para sabermos se as necessidades dos mais jovens são diferentes das necessidades dos mais experientes.")
+        st.caption("Usado para estatística anônima.")
         idade = st.radio("Faixa etária:", ["Menos de 18 anos", "18 a 30 anos", "31 a 45 anos", "46 a 60 anos", "Acima de 60 anos"], horizontal=True)
 
         st.markdown("---")
-        
-        # --- DESTINO ---
         st.subheader("3. Destino")
         st.markdown("**Enviar sugestão para qual vereador(a)?**")
-        st.caption("A Secretaria da Câmara vai receber sua ideia e encaminhá-la ao vereador que você selecionar.")
         vereador = st.selectbox("Escolha o vereador:", ["Escolha um vereador..."] + LISTA_VEREADORES)
 
         st.markdown("---")
-        
-        # --- TERMOS ---
         st.caption("""
         Ao enviar sua sugestão, você concorda que ela será analisada.
         Você confirma que sua proposta é uma sugestão construtiva focada em Espumoso.
-        O envio não garante a implementação da ideia.
         """)
-        termos = st.checkbox("Eu li e concordo com os termos e o foco desta ferramenta.")
+        termos = st.checkbox("Eu li e concordo com os termos.")
         
         if st.form_submit_button("🚀 Enviar Sugestão"):
             if not termos:
@@ -325,7 +301,7 @@ elif modo == "💡 Banco de Ideias":
                 }
                 salvar_ideia(dados_salvar)
                 st.balloons()
-                st.success("Sua ideia foi enviada com sucesso! Agradecemos sua participação.")
+                st.success("Sua ideia foi enviada com sucesso!")
 
     st.divider()
     st.subheader("🔐 Área Administrativa")
