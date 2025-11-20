@@ -7,24 +7,22 @@ from groq import Groq
 # --- CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(page_title="Gabinete Digital", page_icon="🏛️", layout="wide")
 
-# --- CONFIGURAÇÃO DA IA (TENTA PEGAR DO COFRE, SE NÃO TIVER, AVISA) ---
+# --- CONFIGURAÇÃO DA IA ---
 try:
     api_key = st.secrets["GROQ_API_KEY"]
 except:
-    api_key = "" # Deixa vazio pra não quebrar logo de cara, mas avisa depois
+    api_key = "" 
 
-# --- FUNÇÃO: REDATOR IA (ATUALIZADA COM PEDIDO DE INFORMAÇÃO) ---
+# --- FUNÇÃO: REDATOR IA ---
 def gerar_documento_ia(tipo_doc, assunto):
     if not api_key:
         return "⚠️ ERRO: A chave da API não foi encontrada nos Secrets!"
     
     client = Groq(api_key=api_key)
     
-    # Lógica para diferenciar Lei de Pedidos simples
     if tipo_doc == "Projeto de Lei":
         instrucao_extra = "Estruture o texto obrigatoriamente em ARTIGOS (Art. 1º, Art. 2º...), parágrafos e incisos. Linguagem normativa."
     else:
-        # Serve para Pedidos de Providência, Informação, Indicações e Moções
         instrucao_extra = "NÃO use Artigos. Escreva em TEXTO CORRIDO (prosa), direto e objetivo. Comece com: 'O Vereador infra-assinado requer à Secretaria competente...'"
 
     prompt = f"""
@@ -36,7 +34,7 @@ def gerar_documento_ia(tipo_doc, assunto):
     1. {instrucao_extra}
     2. Se for Pedido de Informação, liste os questionamentos de forma clara.
     3. Adicione uma Justificativa convincente ao final.
-    4. Não use markdown de negrito (**) no corpo do texto pra facilitar o copy-paste.
+    4. Não use markdown de negrito (**) no corpo do texto.
     """
     
     try:
@@ -48,39 +46,39 @@ def gerar_documento_ia(tipo_doc, assunto):
     except Exception as e:
         return f"Ops, deu erro na IA: {e}"
 
-# --- FUNÇÃO DE BANCO DE DADOS (ATUALIZADA COM NOVOS CAMPOS) ---
+# --- FUNÇÃO DE BANCO DE DADOS ---
 arquivo_ideias = "banco_de_ideias.csv"
 
 def salvar_ideia(dados):
-    # Se o arquivo não existe, cria com as novas colunas
     if not os.path.exists(arquivo_ideias):
+        # Cria o arquivo com as colunas novas (incluindo Contato)
         df = pd.DataFrame(columns=[
-            "Data", "Nome", "Ideia", "Contribuição", "Localização", 
-            "Áreas", "Idade", "Vereador Destino", "Concordou Termos"
+            "Data", "Nome", "Contato", "Ideia", "Contribuição", 
+            "Localização", "Áreas", "Idade", "Vereador Destino", "Concordou Termos"
         ])
     else:
         df = pd.read_csv(arquivo_ideias)
     
-    # Adiciona a nova linha
     nova_linha = pd.DataFrame([dados])
     df = pd.concat([df, nova_linha], ignore_index=True)
     df.to_csv(arquivo_ideias, index=False)
 
-# --- MENU LATERAL (COM TEXTOS NOVOS) ---
+# --- MENU LATERAL ---
 if os.path.exists("brasao.png"):
     st.sidebar.image("brasao.png", width=120)
+
 st.sidebar.title("Gabinete Digital")
 st.sidebar.markdown("---")
 
-# --- MENU LATERAL (COM CHAVE DE CONTROLE) ---
-# Se não tiver nada na memória ainda, começa no Início
+# Inicializa a navegação se não existir
 if "navegacao" not in st.session_state:
     st.session_state["navegacao"] = "🏠 Início"
 
+# Menu Dropdown
 modo = st.sidebar.selectbox(
     "Selecione a ferramenta:", 
     ["🏠 Início", "⚖️ Assistente de Proposições (com IA)", "💡 Banco de Ideias"],
-    key="navegacao" # ISSO AQUI É O SEGREDO pra conectar com os botões
+    key="navegacao"
 )
 
 st.sidebar.markdown("---")
@@ -88,241 +86,102 @@ st.sidebar.caption("Desenvolvido por:")
 st.sidebar.markdown("**Daniel de Oliveira Colvero**")
 st.sidebar.caption("© 2025 Câmara de Espumoso")
 
-# --- TELA: INÍCIO (COM CORREÇÃO DO ERRO) ---
+# --- TELA: INÍCIO ---
 if modo == "🏠 Início":
     st.title("Assistente Virtual Legislativo")
     st.write("Bem-vindo! Toque em uma das opções abaixo para começar:")
     st.divider()
 
-    # Funções "Ajudantes" para mudar a página sem dar erro
+    # Funções para os botões grandes
     def ir_para_assistente():
         st.session_state.navegacao = "⚖️ Assistente de Proposições (com IA)"
         
     def ir_para_ideias():
         st.session_state.navegacao = "💡 Banco de Ideias"
 
-    # Cria duas colunas para os botões
     col_a, col_b = st.columns(2)
     
     with col_a:
         st.info("🤖 Para Vereadores e Assessores")
-        # O segredo está no on_click=ir_para_assistente
         st.button("Criar Documento / Lei 📝", use_container_width=True, on_click=ir_para_assistente)
             
     with col_b:
         st.success("💡 Para a Comunidade")
-        # O segredo está no on_click=ir_para_ideias
         st.button("Enviar uma Ideia / Sugestão 🚀", use_container_width=True, on_click=ir_para_ideias)
 
     st.divider()
-    st.caption("Ou utilize o menu lateral (seta no canto superior esquerdo) para mais opções.")
 
-# --- TELA: ASSISTENTE DE PROPOSIÇÕES (COM SENHA) ---
+# --- TELA: ASSISTENTE DE PROPOSIÇÕES (RESTRITA) ---
 elif modo == "⚖️ Assistente de Proposições (com IA)":
-    # --- BOTÃO VOLTAR ---
+    
+    # Botão Voltar
     def voltar_inicio():
-            st.session_state.navegacao = "🏠 Início"
-            
-        st.button("⬅️ Voltar para o Início", on_click=voltar_inicio)
-         
-    # Verifica se já está logado na sessão
+        st.session_state.navegacao = "🏠 Início"
+    st.button("⬅️ Voltar para o Início", on_click=voltar_inicio, key="voltar_assistente")
+
+    # Controle de Acesso
     if "acesso_vereador" not in st.session_state:
         st.session_state["acesso_vereador"] = False
 
-    # Se NÃO estiver logado, mostra APENAS a tela de bloqueio
     if not st.session_state["acesso_vereador"]:
         st.header("🔒 Acesso Restrito")
         st.warning("Esta ferramenta é exclusiva para Vereadores e Assessores.")
-        
         senha_digitada = st.text_input("Digite a senha de acesso:", type="password")
         
         if st.button("Entrar"):
-            # --- DEFINA A SENHA AQUI ---
-            if senha_digitada == "camara2025": 
+            if senha_digitada == "camara2025": # <--- SUA SENHA AQUI
                 st.session_state["acesso_vereador"] = True
-                st.rerun() # Atualiza a página pra liberar
+                st.rerun()
             else:
                 st.error("Senha incorreta.")
-                
-    # Se JÁ estiver logado (ELSE), aí sim mostra a ferramenta
     else:
-        # Botãozinho discreto pra sair (Logout)
         if st.button("Sair do Modo Restrito", type="secondary"):
             st.session_state["acesso_vereador"] = False
             st.rerun()
             
         st.divider()
-        st.header("⚖️ Elaboração de Documentos Legislativos")
-        st.write("Preencha os dados abaixo e deixe a Inteligência Artificial redigir a minuta inicial.")
+        st.header("⚖️ Elaboração de Documentos")
+        st.write("Preencha os dados abaixo e deixe a IA redigir a minuta.")
         
         tipo_doc = st.selectbox(
             "Tipo de Proposição", 
             ["Pedido de Providência", "Pedido de Informação", "Indicação", "Projeto de Lei", "Moção de Aplauso", "Moção de Pesar"]
         )
         
-        st.info("💡 **Dica:** Escreva aqui qual o problema, como vc imagina a solução e quais os motivos da sua solicitação. Quanto mais detalhes, melhor!")
-        
-        texto_input = st.text_area(
-            "Detalhamento da solicitação:", 
-            height=150, 
-            placeholder="Ex: Solicito informações sobre o custo da obra na rua X, pois a comunidade relata paralisação..."
-        )
+        st.info("💡 Dica: Quanto mais detalhes, melhor o texto final!")
+        texto_input = st.text_area("Detalhamento da solicitação:", height=150)
         
         if st.button("📝 Elaborar Proposição"):
             if texto_input:
-                with st.spinner('A IA está consultando as leis e redigindo o texto...'):
+                with st.spinner('Redigindo documento...'):
                     texto_final = gerar_documento_ia(tipo_doc, texto_input)
                     st.subheader("Minuta Gerada:")
-                    st.success("Documento criado com sucesso! Copie abaixo:")
                     st.text_area("Texto para Copiar:", value=texto_final, height=500)
             else:
-                st.warning("Por favor, descreva a situação antes de pedir para elaborar.")
+                st.warning("Descreva a situação primeiro.")
 
-# --- TELA: BANCO DE IDEIAS (COMPLETO E NOVO) ---
+# --- TELA: BANCO DE IDEIAS (PÚBLICA) ---
 elif modo == "💡 Banco de Ideias":
-    # --- BOTÃO VOLTAR (COM CORREÇÃO) ---
+    
+    # Botão Voltar
     def voltar_inicio():
         st.session_state.navegacao = "🏠 Início"
-        
-    st.button("⬅️ Voltar para o Início", key="voltar_ideias", on_click=voltar_inicio)
-    st.markdown("Preencha o formulário abaixo para contribuir com o futuro de Espumoso.")
+    st.button("⬅️ Voltar para o Início", on_click=voltar_inicio, key="voltar_ideias")
+
+    st.header("💡 Banco de Ideias da Comunidade")
     
     with st.form("form_ideia_completo", clear_on_submit=True):
-        
-        # 1. Dados Pessoais
         st.subheader("1. Sobre Você")
-        nome = st.text_input("Seu nome completo:", help="Seus dados estarão protegidos. É apenas para contato se necessário.")
+        nome = st.text_input("Seu nome completo:")
+        contato = st.text_input("Seu WhatsApp/Celular (Opcional):", placeholder="(54) 99999-9999")
         
-        idade = st.radio(
-            "Qual a sua idade?",
-            ["Menos de 18 anos", "18 a 30 anos", "31 a 45 anos", "46 a 60 anos", "Acima de 60 anos"],
-            horizontal=True,
-            help="Usado apenas para estatística anônima."
-        )
+        idade = st.radio("Qual a sua idade?", ["-18", "18-30", "31-45", "46-60", "60+"], horizontal=True)
 
         st.markdown("---")
-        
-        # 2. A Ideia
         st.subheader("2. Sua Ideia")
-        
-        ideia_desc = st.text_area(
-            "Descreva sua sugestão/ideia:",
-            height=100,
-            help="Não se preocupe em escrever bonito. Ex: 'Sugiro um quebra-molas na Rua X' ou 'Aulas de violão no bairro Y'."
-        )
-        
-        contribuição = st.text_area(
-            "Como isso pode contribuir para a comunidade?",
-            height=100,
-            help="Por que isso é importante? Ex: 'Evitaria acidentes' ou 'Tiraria jovens da rua'."
-        )
-        
-        localizacao = st.text_input(
-            "Localização (Onde deve acontecer?):",
-            placeholder="Ex: No bairro Centro, na Rua...",
-            help="Diga onde o problema está ou onde a ideia deve ser aplicada."
-        )
-        
-        areas = st.multiselect(
-            "Em qual(is) área(s) sua ideia se encaixa?",
-            [
-                "Agricultura e Zona Rural", "Cultura e Lazer", "Educação", 
-                "Empregabilidade", "Infraestrutura", "Meio Ambiente", 
-                "Mobilidade Urbana", "Saúde", "Segurança", "Tecnologia", "Trânsito"
-            ],
-            help="Pode marcar mais de uma!"
-        )
+        ideia_desc = st.text_area("Descreva sua sugestão/ideia:", height=100)
+        contribuição = st.text_area("Como isso contribui para a comunidade?", height=100)
+        localizacao = st.text_input("Localização:")
+        areas = st.multiselect("Áreas:", ["Saúde", "Educação", "Obras", "Lazer", "Segurança", "Trânsito", "Outros"])
 
         st.markdown("---")
-
-        # 3. Encaminhamento
-        st.subheader("3. Destino")
-        
-        vereador = st.selectbox(
-            "Enviar sugestão para qual vereador(a)?",
-            [
-                "Escolha um vereador...",
-                "Vereadora Dayana Soares de Camargo (PDT)",
-                "Vereador Denner Fernando Duarte Senhor (PL)",
-                "Vereador Eduardo Signor (União Brasil)",
-                "Vereadora Fabiana Dolci Otoni (PP)",
-                "Vereadora Ivone Maria Capitanio Missio (PP)",
-                "Vereador Leandro Keller Colleraus (PDT)",
-                "Vereador Marina Machado (PL)",
-                "Vereador Paulo Flores de Moraes (PDT)",
-                "Vereador Tomas Fiuza (PP)"
-            ],
-            help="Escolha quem você acredita que melhor representa sua ideia."
-        )
-
-        # 4. Termos
-        st.markdown("---")
-        st.caption("""
-        Ao enviar sua sugestão, você concorda que ela será analisada.
-        Confirma que é uma sugestão construtiva para Espumoso.
-        O envio não garante implementação imediata, pois depende de viabilidade.
-        """)
-        termos = st.checkbox("Eu li e concordo com os termos e o foco desta ferramenta.")
-        
-        # Botão de Enviar
-        enviou = st.form_submit_button("🚀 Enviar Sugestão")
-
-        if enviou:
-            # Validação simples
-            if not termos:
-                st.error("Você precisa concordar com os termos para enviar.")
-            elif not ideia_desc:
-                st.error("Por favor, descreva sua ideia.")
-            elif vereador == "Escolha um vereador...":
-                st.error("Por favor, escolha um vereador para receber a ideia.")
-            else:
-                # Prepara os dados para salvar
-                dados_salvar = {
-                    "Data": datetime.now().strftime("%d/%m/%Y %H:%M"),
-                    "Nome": nome,
-                    "Ideia": ideia_desc,
-                    "Contribuição": contribuição,
-                    "Localização": localizacao,
-                    "Áreas": ", ".join(areas), # Junta as áreas com vírgula
-                    "Idade": idade,
-                    "Vereador Destino": vereador,
-                    "Concordou Termos": "Sim"
-                }
-                salvar_ideia(dados_salvar)
-                st.balloons()
-                st.success(f"Obrigado, {nome}! Sua ideia foi registrada e encaminhada para {vereador}.")
-
-    # --- MOSTRAR DADOS (ADM) ---
-    # --- ÁREA RESTRITA DO ADMINISTRADOR 🔐 ---
-    st.divider()
-    st.subheader("🔐 Área Administrativa")
-    
-    # Campo de senha (o type="password" esconde as letras com bolinhas)
-    senha = st.text_input("Digite a senha de administrador para ver as ideias:", type="password")
-    
-    # CONFIGURE A SUA SENHA AQUI (Pode mudar "admin123" pelo que quiser)
-    SENHA_SECRETA = "camesp1955"
-    
-    if senha == SENHA_SECRETA:
-        st.success("Acesso Liberado!")
-        
-        if os.path.exists(arquivo_ideias):
-            df = pd.read_csv(arquivo_ideias)
-            
-            # Mostra a tabela só pra quem tem a senha
-            st.dataframe(df, use_container_width=True)
-            st.metric("Total de Ideias Recebidas", len(df))
-            
-            # Botão para baixar a planilha pro teu computador
-            csv = df.to_csv(index=False).encode('utf-8')
-            st.download_button(
-                label="📥 Baixar Planilha Completa (Excel/CSV)",
-                data=csv,
-                file_name="relatorio_ideias_camara.csv",
-                mime="text/csv",
-            )
-        else:
-            st.info("Nenhuma ideia registrada ainda no banco de dados.")
-            
-    elif senha:
-        st.error("Senha incorreta. Acesso negado.")
