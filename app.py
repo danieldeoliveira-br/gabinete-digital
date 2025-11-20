@@ -72,8 +72,9 @@ if os.path.exists("brasao.png"):
 st.sidebar.title("Gabinete Digital")
 st.sidebar.markdown("---")
 
-modo = st.sidebar.radio(
-    "Navegação:", 
+# --- MENU LATERAL (AGORA COMO LISTA SUSPENSA) ---
+modo = st.sidebar.selectbox(
+    "Selecione a ferramenta:", 
     ["🏠 Início", "⚖️ Assistente de Proposições (com IA)", "💡 Banco de Ideias"]
 )
 
