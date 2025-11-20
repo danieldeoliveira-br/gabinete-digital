@@ -67,6 +67,11 @@ if os.path.exists("brasao.png"):
     st.sidebar.image("brasao.png", width=120)
 
 st.sidebar.title("Gabinete Digital")
+
+# --- NOVAS INFORMAÇÕES DA CÂMARA ---
+st.sidebar.markdown("**Câmara Municipal de Espumoso**")
+st.sidebar.markdown("Rio Grande do Sul")
+st.sidebar.markdown("[www.camaraespumoso.rs.gov.br](https://www.camaraespumoso.rs.gov.br)")
 st.sidebar.markdown("---")
 
 if "navegacao" not in st.session_state:
@@ -80,7 +85,8 @@ modo = st.sidebar.selectbox(
 
 st.sidebar.markdown("---")
 st.sidebar.caption("Desenvolvido por:")
-st.sidebar.markdown("**Daniel de Oliveira Colvero**")
+# --- SEU NOME AGORA É UM LINK DE E-MAIL ---
+st.sidebar.markdown("[**Daniel de Oliveira Colvero**](mailto:daniel.colvero@gmail.com)")
 st.sidebar.caption("© 2025 Câmara de Espumoso")
 
 # --- TELA: INÍCIO ---
@@ -225,7 +231,7 @@ elif modo == "💡 Banco de Ideias":
     st.subheader("🔐 Área Administrativa")
     senha = st.text_input("Senha ADM:", type="password")
     
-    if senha == "admin123":
+    if senha == "Camesp1955":
         st.success("Acesso Liberado!")
         if os.path.exists(arquivo_ideias):
             df = pd.read_csv(arquivo_ideias)
