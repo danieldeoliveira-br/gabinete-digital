@@ -179,9 +179,9 @@ if modo == "🏠 Início":
     with col_a:
         with st.container(border=True): # REMOVIDO: height=200
             st.markdown("## 🤖")
-            st.markdown("#### Área Restrita")
-            st.caption("Cria minutas de leis com inteligência artificial e rigor técnico.")
-            st.button("Criar Lei / Proposições 📝", use_container_width=True, on_click=ir_para_assistente)
+            st.markdown("#### Área do Vereador")
+            st.caption("Cria minutas de leis com inteligência artificial e rigor técnico. Cria mensagem para o mural.")
+            st.button("Criar Proposições / Recados 📝", use_container_width=True, on_click=ir_para_assistente)
             
     # --- CARD 2: BANCO DE IDEIAS ---
     with col_b:
