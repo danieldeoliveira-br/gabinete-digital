@@ -79,7 +79,7 @@ def gerar_documento_ia(autor, tipo_doc, assunto):
        "Plenário Agostinho Somavilla, [Data de Hoje]."
        (Espaço para assinatura)
        {autor}
-       
+       Vereador(a)
        
     IMPORTANTE: Não use markdown de negrito (**) no corpo dos artigos.
     """
@@ -178,7 +178,7 @@ if modo == "🏠 Início":
 
     st.divider()
 
-# --- TELA: GABINETE VIRTUAL (COM FEED GERAL) ---
+# --- TELA: GABINETE VIRTUAL (COM FEED E AVATARES) ---
 elif modo == "👤 Gabinete Virtual":
     def voltar_inicio():
         st.session_state.navegacao = "🏠 Início"
@@ -186,10 +186,9 @@ elif modo == "👤 Gabinete Virtual":
     
     st.header("👤 Gabinetes Virtuais")
     
-    # Seletor de Vereadores
     vereador_selecionado = st.selectbox("Selecione um vereador para ver o perfil completo ou veja o Feed Geral abaixo:", ["Selecione..."] + LISTA_VEREADORES)
     
-    # --- MODO 1: FEED GERAL (Ninguém selecionado) ---
+    # --- MODO 1: FEED GERAL ---
     if vereador_selecionado == "Selecione...":
         st.divider()
         st.subheader("📢 Feed de Notícias - Últimas Atividades da Câmara")
@@ -197,20 +196,23 @@ elif modo == "👤 Gabinete Virtual":
         if os.path.exists(arquivo_mural):
             df_mural = pd.read_csv(arquivo_mural)
             if not df_mural.empty:
-                # Pega as últimas 10 postagens (invertendo a ordem)
                 ultimas_postagens = df_mural.iloc[::-1].head(10)
                 
                 for index, row in ultimas_postagens.iterrows():
                     with st.container(border=True):
-                        # Cabeçalho do Post
+                        # Define avatar para o feed geral
+                        if row['Vereador'].startswith("Vereadora"):
+                            avatar_feed = "👩"
+                        else:
+                            avatar_feed = "👨"
+
                         col_avatar, col_texto = st.columns([1, 6])
                         with col_avatar:
-                            st.markdown("### 🏛️")
+                            st.markdown(f"### {avatar_feed}")
                         with col_texto:
                             st.markdown(f"**{row['Vereador']}**")
                             st.caption(f"Publicado em: {row['Data']}")
                         
-                        # Conteúdo
                         st.markdown(f"#### {row['Titulo']}")
                         st.write(row['Mensagem'])
             else:
@@ -218,13 +220,20 @@ elif modo == "👤 Gabinete Virtual":
         else:
             st.info("Ainda não há publicações no mural.")
 
-    # --- MODO 2: PERFIL INDIVIDUAL (Vereador Selecionado) ---
+    # --- MODO 2: PERFIL INDIVIDUAL ---
     else:
+        # Lógica para definir o avatar grande
+        if vereador_selecionado.startswith("Vereadora"):
+            avatar_perfil = "👩"
+        else:
+            avatar_perfil = "👨"
+
         st.divider()
         col_foto, col_info = st.columns([1, 3])
         
         with col_foto:
-            st.markdown("<div style='font-size: 100px; text-align: center;'>👤</div>", unsafe_allow_html=True)
+            # Usa o avatar definido acima no tamanho grande
+            st.markdown(f"<div style='font-size: 100px; text-align: center;'>{avatar_perfil}</div>", unsafe_allow_html=True)
         
         with col_info:
             st.subheader(vereador_selecionado)
@@ -236,7 +245,6 @@ elif modo == "👤 Gabinete Virtual":
         
         if os.path.exists(arquivo_mural):
             df_mural = pd.read_csv(arquivo_mural)
-            # Filtra só as desse vereador
             posts_vereador = df_mural[df_mural["Vereador"] == vereador_selecionado]
             
             if not posts_vereador.empty:
@@ -345,14 +353,14 @@ elif modo == "💡 Banco de Ideias":
         
         st.subheader("2. Sua Ideia")
         ideia_desc = st.text_area("Descreva sua sugestão:", height=150, help='Dica: Não se preocupe em escrever bonito.')
-        contribuição = st.text_area("Como isso ajuda a comunidade?", height=100, help='Dica: Nos diga por que sua ideia é importante.')
-        localizacao = st.text_input("Localização:", help='Dica: Nos diga onde o problema está.')
+        contribuição = st.text_area("Como isso ajuda a comunidade?", height=100)
+        localizacao = st.text_input("Localização:")
         areas = st.multiselect("Áreas:", ["Saúde", "Educação", "Obras", "Lazer", "Segurança", "Trânsito", "Outros"])
 
         st.markdown("---")
         st.subheader("3. Destino")
         vereador = st.selectbox("Para qual vereador?", ["Escolha um vereador..."] + LISTA_VEREADORES)
-        
+
         st.markdown("---")
         termos = st.checkbox("Li e concordo com os termos.")
         
