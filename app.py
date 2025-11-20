@@ -158,11 +158,13 @@ st.sidebar.markdown("[**Daniel de Oliveira Colvero**](mailto:daniel.colvero@gmai
 st.sidebar.caption("© 2025 Câmara de Espumoso")
 
 # --- TELA: INÍCIO ---
+# --- TELA: INÍCIO (AGORA COM CARDS QUADRADOS) ---
 if modo == "🏠 Início":
     st.title("Legislativo Digital")
-    st.write("Bem-vindo ao ambiente digital do Poder Legislativo de Espumoso! Toque em uma das opções abaixo para começar:")
+    st.write("Bem-vindo ao ambiente digital do Poder Legislativo de Espumoso! Selecione uma ferramenta:")
     st.divider()
 
+    # Funções para os botões grandes (os mesmos callbacks de antes)
     def ir_para_assistente():
         st.session_state.navegacao = "🔐 Área do Vereador"
     def ir_para_ideias():
@@ -172,17 +174,30 @@ if modo == "🏠 Início":
 
     col_a, col_b, col_c = st.columns(3)
     
+    # --- CARD 1: ASSISTENTE DE PROPOSIÇÕES ---
     with col_a:
-        st.info("🤖 Para Vereadores")
-        st.button("Criar Proposições / Notícias 📝", use_container_width=True, on_click=ir_para_assistente)
+        # Usamos o container com borda para simular o card
+        with st.container(border=True, height=200): 
+            st.markdown("## 🤖")
+            st.markdown("#### Área Restrita")
+            st.caption("Cria minutas de leis com inteligência artificial e rigor técnico.")
+            st.button("Criar Proposição 📝", use_container_width=True, on_click=ir_para_assistente)
             
+    # --- CARD 2: BANCO DE IDEIAS ---
     with col_b:
-        st.success("💡 Para a Comunidade")
-        st.button("Enviar Ideia / Sugestão 🚀", use_container_width=True, on_click=ir_para_ideias)
+        with st.container(border=True, height=200):
+            st.markdown("## 💡")
+            st.markdown("#### Banco de Ideias")
+            st.caption("Canal direto para sugestões e propostas da comunidade.")
+            st.button("Enviar Sugestão 🚀", use_container_width=True, on_click=ir_para_ideias)
 
+    # --- CARD 3: GABINETE VIRTUAL ---
     with col_c:
-        st.warning("🏛️ Mural dos Vereadores")
-        st.button("Visitar Gabinete Virtual 👤", use_container_width=True, on_click=ir_para_gabinete)
+        with st.container(border=True, height=200):
+            st.markdown("## 🏛️")
+            st.markdown("#### Mural de Notícias")
+            st.caption("Acompanhe as atividades e postagens dos vereadores da Câmara.")
+            st.button("Visitar Mural 👤", use_container_width=True, on_click=ir_para_gabinete)
 
     st.divider()
 
