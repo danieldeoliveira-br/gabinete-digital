@@ -132,10 +132,27 @@ modo = st.sidebar.selectbox(
 
 st.sidebar.markdown("---")
 
-# --- BOTÃO DE WHATSAPP NOVO ---
+# --- BOTÃO DE WHATSAPP VERDE (CORRIGIDO) ---
 link_whatsapp = "https://wa.me/555433834488" 
-st.sidebar.link_button("💬 Falar no WhatsApp", link_whatsapp, type="primary")
-# ------------------------------
+
+st.sidebar.markdown(f"""
+    <a href="{link_whatsapp}" target="_blank" style="text-decoration: none;">
+        <div style="
+            background-color: #128C7E; 
+            color: white; 
+            padding: 12px; 
+            border-radius: 8px; 
+            text-align: center; 
+            font-weight: bold;
+            font-family: sans-serif;
+            margin-bottom: 10px;
+            box-shadow: 0px 2px 5px rgba(0,0,0,0.2);
+            transition: 0.3s;">
+            💬 Falar no WhatsApp
+        </div>
+    </a>
+""", unsafe_allow_html=True)
+# -----------------------------------------------
 
 st.sidebar.markdown("---")
 st.sidebar.caption("Desenvolvido por:")
