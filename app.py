@@ -159,12 +159,13 @@ st.sidebar.caption("© 2025 Câmara de Espumoso")
 
 # --- TELA: INÍCIO ---
 # --- TELA: INÍCIO (AGORA COM CARDS QUADRADOS) ---
+# --- TELA: INÍCIO (AGORA COM CARDS DE ALTURA AUTOMÁTICA) ---
 if modo == "🏠 Início":
     st.title("Legislativo Digital")
     st.write("Bem-vindo ao ambiente digital do Poder Legislativo de Espumoso! Selecione uma ferramenta:")
     st.divider()
 
-    # Funções para os botões grandes (os mesmos callbacks de antes)
+    # Funções de Callback
     def ir_para_assistente():
         st.session_state.navegacao = "🔐 Área do Vereador"
     def ir_para_ideias():
@@ -174,26 +175,25 @@ if modo == "🏠 Início":
 
     col_a, col_b, col_c = st.columns(3)
     
-    # --- CARD 1: ASSISTENTE DE PROPOSIÇÕES ---
+    # --- CARD 1: ÁREA RESTRITA ---
     with col_a:
-        # Usamos o container com borda para simular o card
-        with st.container(border=True, height=200): 
+        with st.container(border=True): # REMOVIDO: height=200
             st.markdown("## 🤖")
             st.markdown("#### Área Restrita")
             st.caption("Cria minutas de leis com inteligência artificial e rigor técnico.")
-            st.button("Criar Proposição 📝", use_container_width=True, on_click=ir_para_assistente)
+            st.button("Criar Lei / Proposições 📝", use_container_width=True, on_click=ir_para_assistente)
             
     # --- CARD 2: BANCO DE IDEIAS ---
     with col_b:
-        with st.container(border=True, height=200):
+        with st.container(border=True): # REMOVIDO: height=200
             st.markdown("## 💡")
             st.markdown("#### Banco de Ideias")
             st.caption("Canal direto para sugestões e propostas da comunidade.")
-            st.button("Enviar Sugestão 🚀", use_container_width=True, on_click=ir_para_ideias)
+            st.button("Enviar Ideia / Sugestão 🚀", use_container_width=True, on_click=ir_para_ideias)
 
     # --- CARD 3: GABINETE VIRTUAL ---
     with col_c:
-        with st.container(border=True, height=200):
+        with st.container(border=True): # REMOVIDO: height=200
             st.markdown("## 🏛️")
             st.markdown("#### Mural de Notícias")
             st.caption("Acompanhe as atividades e postagens dos vereadores da Câmara.")
