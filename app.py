@@ -85,9 +85,9 @@ modo = st.sidebar.selectbox(
 
 st.sidebar.markdown("---")
 st.sidebar.caption("Desenvolvido por:")
-# --- SEU NOME AGORA É UM LINK DE E-MAIL ---
-st.sidebar.markdown("[**Daniel de Oliveira Colvero**](mailto:daniel.colvero@gmail.com)")
-st.sidebar.caption("© 2025 Câmara de Espumoso")
+# --- NOME COM LINK DE E-MAIL ---
+st.sidebar.markdown("[**Daniel Colvero**](mailto:daniel.colvero@gmail.com)")
+st.sidebar.caption("©2025 Câmara de Espumoso")
 
 # --- TELA: INÍCIO ---
 if modo == "🏠 Início":
