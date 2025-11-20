@@ -13,34 +13,55 @@ try:
 except:
     api_key = ""
 
-# --- FUNÇÃO: REDATOR IA ---
+# --- FUNÇÃO: REDATOR IA (ANTI-INCONSTITUCIONALIDADE) ---
 def gerar_documento_ia(tipo_doc, assunto):
     if not api_key:
         return "⚠️ ERRO: A chave da API não foi encontrada nos Secrets!"
     
     client = Groq(api_key=api_key)
     
+    # Regras específicas para evitar Vício de Iniciativa em Leis
     if tipo_doc == "Projeto de Lei":
-        instrucao_extra = "Estruture o texto obrigatoriamente em ARTIGOS (Art. 1º, Art. 2º...), parágrafos e incisos. Linguagem normativa."
+        instrucao_extra = """
+        ESTRUTURA DE LEI:
+        - Artigos numerados (Art. 1º, Art. 2º...).
+        - Artigo final: 'Esta Lei entra em vigor na data de sua publicação.'
+        
+        ⚠️ REGRA DE OURO (VÍCIO DE INICIATIVA):
+        - Vereadores NÃO podem criar despesas diretas para a Prefeitura nem mexer em órgãos públicos.
+        - Se o assunto for obra, serviço ou gestão (ex: criar um programa de saúde), redija o texto estabelecendo DIRETRIZES ou use 'Fica o Poder Executivo AUTORIZADO a...'.
+        - NUNCA use verbos de ordem direta como 'A Prefeitura deve construir' ou 'O Prefeito é obrigado a'. Use 'O Poder Executivo poderá implantar'.
+        - Inclua sempre o artigo: 'As despesas decorrentes desta Lei correrão por conta de dotações orçamentárias próprias.'
+        """
     else:
-        instrucao_extra = "NÃO use Artigos. Escreva em TEXTO CORRIDO (prosa), direto e objetivo. Comece com: 'O Vereador infra-assinado requer à Secretaria competente...'"
+        instrucao_extra = """
+        ESTRUTURA DE TEXTO CORRIDO:
+        - Sem artigos. Use parágrafos.
+        - Inicie com: 'O Vereador infra-assinado requer à Secretaria competente...'
+        - Seja direto: Diga o problema e a solução sugerida.
+        """
 
     prompt = f"""
-    Atue como um Assessor Jurídico experiente da Câmara Municipal de Espumoso/RS.
-    Redija uma minuta completa de: {tipo_doc}.
-    Sobre o assunto: {assunto}.
+    Atue como um Assessor Jurídico Sênior da Câmara Municipal de Espumoso/RS.
+    Redija uma minuta profissional de: {tipo_doc}.
+    Assunto: {assunto}.
     
-    REGRAS DE OURO:
-    1. {instrucao_extra}
-    2. Se for Pedido de Informação, liste os questionamentos de forma clara.
-    3. Adicione uma Justificativa convincente ao final.
-    4. Não use markdown de negrito (**) no corpo do texto.
+    REGRAS DE FORMATAÇÃO:
+    1. NÃO use negrito (**) no corpo do texto.
+    2. Cabeçalho Oficial: "EXCELENTÍSSIMO SENHOR PRESIDENTE DA CÂMARA MUNICIPAL DE ESPUMOSO – RS".
+    3. Ementa: Curta e em caixa alta.
+    4. Justificativa: 3 parágrafos (Problema, Solução, Benefício Público).
+    5. Fechamento com data e espaço para assinatura.
+    
+    REGRAS DE CONTEÚDO:
+    {instrucao_extra}
     """
     
     try:
         chat_completion = client.chat.completions.create(
             messages=[{"role": "user", "content": prompt}],
             model="llama-3.3-70b-versatile",
+            temperature=0.3 # Mantém a IA séria
         )
         return chat_completion.choices[0].message.content
     except Exception as e:
@@ -149,7 +170,9 @@ elif modo == "⚖️ Assistente de Proposições (com IA)":
             "Tipo de Proposição", 
             ["Pedido de Providência", "Pedido de Informação", "Indicação", "Projeto de Lei", "Moção de Aplauso", "Moção de Pesar"]
         )
-        
+        # --- AVISO DE VÍCIO DE INICIATIVA ---
+        if tipo_doc == "Projeto de Lei":
+            st.warning("⚠️ Atenção: Lembre-se que Vereadores não podem criar leis que gerem despesa direta ou mexam na estrutura da Prefeitura (Vício de Iniciativa). Se for o caso, a IA tentará criar uma lei 'Autorizativa'.")
         st.info("💡 Dica: Quanto mais detalhes, melhor o texto final!")
         texto_input = st.text_area("Detalhamento da solicitação:", height=150)
         
