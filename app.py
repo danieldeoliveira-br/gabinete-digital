@@ -591,7 +591,7 @@ elif modo == "🔐 Área do Vereador":
                 st.text_area("Texto Final da Minuta:", value=minuta_para_copia, height=500, label_visibility="collapsed")
                 
                 # 3. INSTRUÇÃO E BOTÕES DE AÇÃO
-                st.info("💡 Para copiar o texto integral, selecione todo o conteúdo no campo acima (Ctrl+A no PC / Pressione e segure no celular).")
+                st.info("💡 Para copiar o texto pelo celular: Toque Longo em alguma palavra - Selecionar tudo - Copiar. Depois use o botão Softcam logo abaixo, para ir ao sistema e colar seu texto.")
                 
                 # Botão Softcam
                 st.markdown("---")
