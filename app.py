@@ -319,101 +319,174 @@ elif modo == "👤 Gabinete Virtual":
             else: st.info("Sem publicações deste vereador.")
 
 # --- TELA: ÁREA DO VEREADOR (RESTRITA) ---
+# --- TELA: ÁREA DO VEREADOR (RESTRITA) ---
 elif modo == "🔐 Área do Vereador":
-    def voltar_inicio(): st.session_state.navegacao = "🏠 Início"
-    st.button("⬅️ Voltar", on_click=voltar_inicio)
+    def voltar_inicio():
+        st.session_state.navegacao = "🏠 Início"
+    st.button("⬅️ Voltar para o Início", on_click=voltar_inicio, key="voltar_assistente")
 
-    if "acesso_vereador" not in st.session_state: st.session_state["acesso_vereador"] = False
-    if "vereador_logado" not in st.session_state: st.session_state["vereador_logado"] = None 
+    # Inicializa ou mantém o estado de acesso
+    if "acesso_vereador" not in st.session_state:
+        st.session_state["acesso_vereador"] = False
+    if "vereador_logado" not in st.session_state:
+        st.session_state["vereador_logado"] = None 
 
+    # --- LÓGICA DE LOGIN ---
     if not st.session_state["acesso_vereador"]:
         st.header("🔒 Acesso Restrito - Identificação")
-        st.warning("Selecione seu nome e insira a senha de acesso.")
-        
-        # Lista completa para login
-        usuario_identificado = st.selectbox("Eu sou:", ["Selecione..."] + LISTA_LOGIN)
-        senha_digitada = st.text_input("Senha:", type="password")
-        
+        st.warning("Selecione seu nome e insira a senha de acesso da assessoria.")
+
+        vereador_identificado = st.selectbox("Eu sou:", ["Selecione seu nome..."] + LISTA_LOGIN)
+        senha_digitada = st.text_input("Digite a senha de acesso:", type="password")
+
         if st.button("Entrar"):
-            if usuario_identificado != "Selecione..." and senha_digitada == "camara2025":
+            if vereador_identificado != "Selecione seu nome..." and senha_digitada == "camara2025":
                 st.session_state["acesso_vereador"] = True
-                st.session_state["vereador_logado"] = usuario_identificado 
+                st.session_state["vereador_logado"] = vereador_identificado 
                 st.rerun()
-            else: st.error("Dados incorretos.")
+            else:
+                st.error("Falha na autenticação. Verifique a senha e se o nome foi selecionado.")
+
+    # --- ÁREA LOGADA (Acesso Liberado) ---
     else:
         autor_sessao = st.session_state["vereador_logado"]
-        if st.button("Sair", type="secondary"):
-            st.session_state["acesso_vereador"] = False; st.session_state["vereador_logado"] = None; st.rerun()
 
-        st.success(f"Logado como: **{autor_sessao}**")
-        tab1, tab2 = st.tabs(["⚖️ Criar Documentos", "📢 Gerenciar Mural"])
+        if st.button("Sair do Modo Restrito", type="secondary"):
+            st.session_state["acesso_vereador"] = False
+            st.session_state["vereador_logado"] = None
+            st.rerun()
+
+        st.divider()
+        st.success(f"Acesso Liberado para **{autor_sessao}**.")
         
-        # --- ABA 1: IA ---
-        with tab1:
+        # AQUI DEFINIMOS OS NOMES CERTOS: aba_ia e aba_mural
+        aba_ia, aba_mural = st.tabs(["⚖️ Criar Documentos (IA)", "📢 Gerenciar Mural"])
+        
+        # --- ABA 1: INTELIGÊNCIA ARTIFICIAL ---
+        with aba_ia:
             st.header("Elaboração de Documentos")
             
-            # Campo travado
-            autor_selecionado = st.selectbox("Autor:", [autor_sessao], disabled=True)
-
+            # --- ÁREA DE CRIAÇÃO ---
+            autor_selecionado = st.selectbox("Autor da Proposição:", [autor_sessao], disabled=True)
             tipo_doc = st.selectbox("Tipo:", ["Pedido de Providência", "Pedido de Informação", "Indicação", "Projeto de Lei", "Moção de Aplauso", "Moção de Pesar"])
-            if tipo_doc == "Projeto de Lei": st.warning("⚠️ Cuidado com Vício de Iniciativa.")
-            texto_input = st.text_area("Detalhamento:", height=150)
             
-            if st.button("📝 Elaborar"):
+            if tipo_doc == "Projeto de Lei":
+                st.warning("⚠️ Atenção: A IA evitará Vício de Iniciativa criando leis 'Autorizativas' quando necessário.")
+            
+            texto_input = st.text_area("Detalhamento da solicitação:", height=150)
+            
+            # O BOTÃO APENAS PROCESSA E SALVA. NÃO EXIBE NADA.
+            if st.button("📝 Elaborar Proposição"):
                 if texto_input:
-                    with st.spinner('Redigindo...'):
+                    with st.spinner('Redigindo documento com rigor técnico...'):
                         texto_final = gerar_documento_ia(autor_sessao, tipo_doc, texto_input)
+                        
+                        # Salva tudo no estado
+                        prop_id_novo = datetime.now().strftime("PROP_%Y%m%d%H%M%S")
+                        st.session_state['prop_id'] = prop_id_novo
+                        st.session_state['prop_version_num'] = 1
                         st.session_state['minuta_pronta'] = texto_final
-                        prop_id = datetime.now().strftime("%Y%m%d%H%M%S")
-                        st.session_state['prop_id'] = prop_id
-                        st.session_state['prop_ver'] = 1
-                        st.session_state['tipo_atual'] = tipo_doc
                         st.session_state['assunto_atual'] = texto_input
-                        salvar_historico(autor_sessao, tipo_doc, texto_input, texto_final, prop_id, 1)
-                        st.rerun()
+                        st.session_state['tipo_doc_atual'] = tipo_doc
+                        
+                        # Salva no histórico
+                        salvar_historico(
+                            autor_sessao, 
+                            tipo_doc, 
+                            texto_input, 
+                            texto_final, 
+                            prop_id_novo, 
+                            1
+                        )
+                        st.rerun() # Reinicia para limpar a tela e mostrar apenas o resultado abaixo
             
+            # --- ÁREA DE EXIBIÇÃO (Só aparece se existir minuta no estado) ---
             if 'minuta_pronta' in st.session_state:
-                st.error("🚨 AVISO LEGAL: IA pode cometer erros. Revise antes de usar.")
+                
+                st.divider() # Separação visual clara
+                
+                # 1. AVISO LEGAL
+                st.error("🚨 AVISO LEGAL: Este texto é uma sugestão preliminar gerada por Inteligência Artificial (IA). A responsabilidade pela análise e correção é do Vereador(a).")
+                
+                # 2. MINUTA ATUAL
                 st.subheader("Minuta Gerada:")
+                minuta_para_copia = st.session_state['minuta_pronta']
                 
-                # VISUALIZAÇÃO LIMPA
-                st.text_area("Texto Final:", value=st.session_state['minuta_pronta'], height=800)
+                # Exibição em Text Area (Para leitura correta no celular)
+                st.text_area("Texto Final:", value=minuta_para_copia, height=800)
                 
-                # CÓPIA COM ÍCONE NATIVO DO ST.CODE (A única que funciona 100%)
-                st.code(st.session_state['minuta_pronta'], language="markdown")
-                st.info("💡 Use o ícone de cópia acima.")
+                # 3. INSTRUÇÃO DE CÓPIA
+                st.info("💡 Para copiar: Selecione todo o texto acima (Long Press no celular / Ctrl+A no PC) e copie manualmente.")
                 
-                st.link_button("🌐 Ir para Softcam", "https://www.camaraespumoso.rs.gov.br/softcam/", type="primary", use_container_width=True)
-                
-                st.markdown("---")
-                st.subheader("🔄 Revisão")
-                with st.form("revisao"):
-                    current_ver = st.session_state['prop_ver']
-                    st.write(f"Revisar V{current_ver}")
-                    msg_rev = st.text_input("O que melhorar?")
-                    if st.form_submit_button("🔁 Revisar"):
-                        nova_minuta = gerar_revisao_ia(st.session_state['minuta_pronta'], msg_rev, autor_selecionado, st.session_state['tipo_atual'])
-                        st.session_state['prop_ver'] += 1
-                        st.session_state['minuta_pronta'] = nova_minuta
-                        salvar_historico(autor_selecionado, st.session_state['tipo_atual'], st.session_state['assunto_atual'], nova_minuta, st.session_state['prop_id'], st.session_state['prop_ver'])
-                        st.rerun()
-            
-                # Histórico
-                if 'prop_id' in st.session_state:
-                    with st.expander("Histórico"):
-                         if os.path.exists(arquivo_historico):
-                            df_h = pd.read_csv(arquivo_historico)
-                            df_p = df_h[df_h["ID_PROPOSICAO"] == st.session_state['prop_id']].sort_values(by="VERSAO_NUM", ascending=False)
-                            for i, r in df_p.iterrows():
-                                if st.button(f"Carregar V{r['VERSAO_NUM']}", key=f"hist_{r['VERSAO_NUM']}"):
-                                    st.session_state['minuta_pronta'] = r['MINUTA_TEXTO']
-                                    st.rerun()
+                # Botão Softcam
+                st.link_button(
+                    "🌐 Ir para o Softcam", 
+                    "https://www.camaraespumoso.rs.gov.br/softcam/", 
+                    type="primary", 
+                    use_container_width=True
+                )
 
-        # --- ABA 2: MURAL ---
-        with tab2:
+                # --- ÁREA DE REVISÃO ---
+                st.markdown("---")
+                st.subheader("🔄 Revisão e Melhoria")
+                
+                with st.form("revisao_form"):
+                    st.write(f"Revisando Versão V{st.session_state['prop_version_num']}")
+                    pedido_revisao = st.text_input("O que você quer mudar?")
+                    if st.form_submit_button("🔁 Gerar Nova Versão"):
+                        if pedido_revisao:
+                            with st.spinner('Revisando...'):
+                                nova_minuta = gerar_revisao_ia(
+                                    st.session_state['minuta_pronta'], 
+                                    pedido_revisao, 
+                                    autor_sessao, 
+                                    st.session_state['tipo_doc_atual']
+                                )
+                                
+                                # Atualiza versão
+                                nova_versao = st.session_state['prop_version_num'] + 1
+                                st.session_state['prop_version_num'] = nova_versao
+                                st.session_state['minuta_pronta'] = nova_minuta
+                                
+                                salvar_historico(
+                                    autor_sessao, 
+                                    st.session_state['tipo_doc_atual'], 
+                                    st.session_state['assunto_atual'], 
+                                    nova_minuta, 
+                                    st.session_state['prop_id'], 
+                                    nova_versao
+                                )
+                                st.rerun()
+
+                # --- HISTÓRICO ---
+                if 'prop_id' in st.session_state:
+                    with st.expander("Ver Histórico de Versões"):
+                         if os.path.exists(arquivo_historico):
+                            df_hist = pd.read_csv(arquivo_historico)
+                            df_prop = df_hist[df_hist["ID_PROPOSICAO"] == st.session_state['prop_id']].sort_values(by="VERSAO_NUM", ascending=False)
+                            
+                            for index, row in df_prop.iterrows():
+                                col1, col2 = st.columns([1, 3])
+                                with col1:
+                                    if st.button(f"Carregar V{row['VERSAO_NUM']}", key=f"load_{row['VERSAO_NUM']}"):
+                                        st.session_state['minuta_pronta'] = row['MINUTA_TEXTO']
+                                        st.session_state['prop_version_num'] = row['VERSAO_NUM']
+                                        st.rerun()
+                                with col2:
+                                    st.caption(f"{row['DATA_HORA']}")
+            else:
+                st.info("Preencha os dados acima para gerar uma nova minuta.")
+
+        # --- ABA 2: MURAL DE NOTÍCIAS ---
+        with aba_mural:
             st.header("📢 Gerenciar Mural")
             with st.form("post"):
-                autor_post = st.selectbox("Autor:", [autor_sessao], disabled=True)
+                # Lógica para Jurídico postar em nome de vereadores
+                if autor_sessao in LISTA_JURIDICO:
+                    autor_post = st.selectbox("Quem está postando?", LISTA_VEREADORES)
+                else:
+                    autor_post = st.selectbox("Quem está postando?", [autor_sessao], disabled=True)
+                
                 titulo = st.text_input("Título")
                 msg = st.text_area("Mensagem")
                 if st.form_submit_button("Publicar"):
@@ -421,82 +494,28 @@ elif modo == "🔐 Área do Vereador":
                     st.success("Publicado!"); st.rerun()
             
             st.divider()
-            st.subheader("🗑️ Editar/Excluir")
+            st.subheader("🗑️ Editar/Excluir Postagens")
+            st.info("Edite na tabela e clique em SALVAR.")
             
             if os.path.exists(arquivo_mural):
                 df_full = pd.read_csv(arquivo_mural)
-                # Se for Jurídico, vê tudo. Se for vereador, vê só o seu.
-                if "Jurídica" in autor_sessao:
+                
+                # Filtro de visualização
+                if autor_sessao in LISTA_JURIDICO:
                      df_filter = df_full
                 else:
                      df_filter = df_full[df_full["Vereador"] == autor_sessao]
                 
-                # Editor COM CHAVE DE ESTADO
+                # Editor
                 df_edit = st.data_editor(df_filter, num_rows="dynamic", key="editor_mural_key", use_container_width=True)
                 
                 if st.button("💾 Salvar Alterações Mural"):
-                    # Salva misturando com os dados dos outros que não foram tocados
-                    # Lê do estado para garantir
-                    df_final_editado = st.session_state["editor_mural_key"]
-                    
-                    if "Jurídica" in autor_sessao:
-                        df_final_editado.to_csv(arquivo_mural, index=False)
+                    # Lógica de salvamento
+                    if autor_sessao in LISTA_JURIDICO:
+                        # Jurídico salva o arquivo todo (pois viu tudo)
+                        df_edit.to_csv(arquivo_mural, index=False)
                     else:
+                        # Vereador só salva a parte dele mesclada com o resto
                         df_others = df_full[df_full["Vereador"] != autor_sessao]
-                        pd.concat([df_others, df_final_editado]).to_csv(arquivo_mural, index=False)
+                        pd.concat([df_others, df_edit]).to_csv(arquivo_mural, index=False)
                     st.success("Salvo!"); st.rerun()
-
-# --- TELA: BANCO DE IDEIAS ---
-elif modo == "💡 Banco de Ideias":
-    def voltar_inicio(): st.session_state.navegacao = "🏠 Início"
-    st.button("⬅️ Voltar", on_click=voltar_inicio)
-    st.title("Banco de Ideias"); st.info("Envie sua sugestão.")
-    
-    with st.form("ideia", clear_on_submit=False):
-        nome = st.text_input("Nome:")
-        contato = st.text_input("Contato:")
-        idade = st.radio("Idade:", ["-18", "18-30", "31-45", "46-60", "60+"], horizontal=True)
-        ideia = st.text_area("Ideia:")
-        local = st.text_input("Local:")
-        area = st.multiselect("Área:", ["Saúde", "Educação", "Obras", "Outros"])
-        dest = st.selectbox("Para:", ["Escolha..."] + LISTA_VEREADORES)
-        termos = st.checkbox("Concordo com os termos.")
-        
-        if st.form_submit_button("Enviar"):
-            if termos and ideia and dest != "Escolha...":
-                salvar_ideia({"Data": datetime.now().strftime("%d/%m %H:%M"), "Nome": nome, "Contato": contato, "Idade": idade, "Ideia": ideia, "Localização": local, "Áreas": ", ".join(area), "Vereador Destino": dest, "Concordou Termos": "Sim"})
-                st.balloons()
-                st.success("✅ Enviado com sucesso! Limpe os campos para novo envio.")
-            else: st.error("Preencha tudo.")
-
-    st.divider()
-    st.subheader("🔐 Área Administrativa")
-    senha = st.text_input("Senha ADM (Números):", type="password")
-    
-    if "admin_logado" not in st.session_state: st.session_state["admin_logado"] = False
-    
-    if not st.session_state["admin_logado"]:
-        if st.button("Acessar Admin"):
-            if senha == "12345": st.session_state["admin_logado"] = True; st.rerun()
-            else: st.error("Senha incorreta.")
-    else:
-        if st.button("Sair Admin"): st.session_state["admin_logado"] = False; st.rerun()
-        
-        st.subheader("Gerenciar Ideias")
-        st.caption("Selecione linhas e aperte Delete para apagar.")
-        
-        if os.path.exists(arquivo_ideias):
-            df = pd.read_csv(arquivo_ideias)
-            
-            # Editor Admin com CHAVE DE ESTADO
-            st.data_editor(df, num_rows="dynamic", key="editor_ideias_admin", use_container_width=True)
-            
-            c1, c2 = st.columns(2)
-            with c1:
-                if st.button("💾 Salvar Tabela"):
-                    # Salva direto do estado
-                    st.session_state["editor_ideias_admin"].to_csv(arquivo_ideias, index=False)
-                    st.success("Salvo!"); st.rerun()
-            with c2:
-                st.download_button("📥 Baixar CSV", df.to_csv(index=False).encode('utf-8'), "ideias.csv", "text/csv")
-        else: st.info("Sem dados.")
