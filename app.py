@@ -330,20 +330,24 @@ if modo == "🏠 Início":
 
     st.divider()
 
-# --- NOVO BLOCO: REDES SOCIAIS ---
-    st.markdown("### Acompanhe-nos nas Redes Sociais")
-    col_fb, col_ig, col_yt, col_wa_site = st.columns(4)
+# --- NOVO BLOCO: REDES SOCIAIS (AGORA COM DISCORD) ---
+    st.markdown("Acompanhe-nos nas Redes Sociais")
     
-    # OBS: Substitua os links abaixo pelos endereços reais da Câmara!
+    # Criando 5 colunas para o novo layout de redes (Facebook, Instagram, YouTube, Discord, Site Oficial)
+    col_fb, col_ig, col_yt, col_dc, col_site = st.columns(5)
+    
+    # OBS: Você pode mudar os links dos placeholders!
     
     with col_fb:
-        st.markdown("[📘 Facebook](https://facebook.com/camaraespumoso)")
+        st.markdown(f'<a href="https://facebook.com/camaraespumoso" style="text-decoration: none; color: #FAFAFA;">📘 Facebook</a>', unsafe_allow_html=True)
     with col_ig:
-        st.markdown("[📸 Instagram](https://instagram.com/camaraespumoso)")
+        st.markdown(f'<a href="https://instagram.com/camaraespumoso" style="text-decoration: none; color: #FAFAFA;">📸 Instagram</a>', unsafe_allow_html=True)
     with col_yt:
-        st.markdown("[▶️ YouTube](https://youtube.com/@camaraespumoso)")
-    with col_wa_site:
-        st.markdown("[🌐 Site Oficial](https://www.camaraespumoso.rs.gov.br)") # Mantém o link para o site aqui também
+        st.markdown(f'<a href="https://youtube.com/camaraespumoso" style="text-decoration: none; color: #FAFAFA;">▶️ YouTube</a>', unsafe_allow_html=True)
+    with col_dc:
+        st.markdown(f'<a href="https://discord.gg/a7dGZJUx" style="text-decoration: none; color: #FAFAFA;">💬 Discord</a>', unsafe_allow_html=True) 
+    with col_site:
+        st.markdown(f'<a href="https://www.camaraespumoso.rs.gov.br" style="text-decoration: none; color: #FAFAFA;">🌐 Site Oficial</a>', unsafe_allow_html=True) 
     
     st.divider()
 
