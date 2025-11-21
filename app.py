@@ -384,16 +384,19 @@ elif modo == "🔐 Área do Vereador":
                     st.success("Mural atualizado com sucesso!")
                     st.rerun()
 
-# --- TELA: BANCO DE IDEIAS (PÚBLICA) ---
+# --- TELA: BANCO DE IDEIAS (PÚBLICA - DADOS RETIDOS) ---
 elif modo == "💡 Banco de Ideias":
+    
     def voltar_inicio():
         st.session_state.navegacao = "🏠 Início"
+        
     st.button("⬅️ Voltar para o Início", on_click=voltar_inicio, key="voltar_ideias")
 
     st.title("Banco de Ideias - Espumoso/RS")
     st.info("Bem-vindo(a)! Envie suas sugestões construtivas para a cidade.")
     
-    with st.form("form_ideia_completo", clear_on_submit=True):
+    # REMOVIDO: clear_on_submit=True para reter dados em caso de erro.
+    with st.form("form_ideia_completo"): 
         st.subheader("1. Sobre Você")
         nome = st.text_input("Seu nome completo:", help="Precisamos dos seus dados apenas para que o Vereador possa, se necessário, entrar em contato para entender melhor a sua ideia. Seus dados estarão protegidos.")
         contato = st.text_input("Seu número de celular:")
@@ -401,8 +404,8 @@ elif modo == "💡 Banco de Ideias":
         st.subheader("2. Sua Ideia")
         ideia_desc = st.text_area("Descreva sua sugestão:", height=150, help='Dica: Não se preocupe em escrever bonito.')
         contribuição = st.text_area("Como isso ajuda a comunidade?", height=100)
-        localizacao = st.text_input("Localização:")
-        areas = st.multiselect("Áreas:", ["Saúde", "Educação e Cultura", "Obras", "Lazer", "Segurança", "Trânsito", "Mobilidade", "Emprego e Renda", "Outros"])
+        localizacao = st.text_input("Localização:", help='Dica: Nos diga onde o problema está.')
+        areas = st.multiselect("Áreas:", ["Saúde", "Educação", "Obras", "Lazer", "Segurança", "Trânsito", "Outros"])
 
         st.markdown("---")
         st.subheader("3. Destino")
@@ -412,7 +415,15 @@ elif modo == "💡 Banco de Ideias":
         termos = st.checkbox("Li e concordo com os termos.")
         
         if st.form_submit_button("🚀 Enviar"):
-            if termos and ideia_desc and vereador != "Escolha um vereador...":
+            if not termos:
+                # O erro aparece, mas o texto preenchido permanece
+                st.error("Você precisa concordar com os termos para enviar.")
+            elif not ideia_desc:
+                st.error("Por favor, descreva sua ideia.")
+            elif vereador == "Escolha um vereador...":
+                st.error("Por favor, escolha um vereador para receber a ideia.")
+            else:
+                # Lógica de salvar (Se deu tudo certo)
                 dados = {
                     "Data": datetime.now().strftime("%d/%m/%Y %H:%M"),
                     "Nome": nome, "Contato": contato, "Ideia": ideia_desc,
@@ -421,9 +432,9 @@ elif modo == "💡 Banco de Ideias":
                 }
                 salvar_ideia(dados)
                 st.balloons()
-                st.success("Enviado com sucesso!")
-            else:
-                st.error("Preencha os campos obrigatórios e aceite os termos.")
+                st.success("Enviado com sucesso! A página será recarregada para limpar o formulário.")
+                # Recarrega para limpar, mas só depois do sucesso total
+                st.rerun() 
 
     st.divider()
     st.subheader("🔐 Área Administrativa")
