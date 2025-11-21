@@ -382,11 +382,24 @@ elif modo == "💡 Banco de Ideias":
         nome = st.text_input("Nome:")
         contato = st.text_input("Contato:")
         idade = st.radio("Idade:", ["Menos de 18", "18-30 anos", "31-45 anos", "46-60 anos", "60+"], horizontal=True)
-        ideia = st.text_area("Ideia:")
-        local = st.text_input("Local:")
-        area = st.multiselect("Área:", ["Saúde", "Educação", "Obras", "Outros"])
-        dest = st.selectbox("Para:", ["Escolha..."] + LISTA_VEREADORES)
-        termos = st.checkbox("Concordo com os termos.")
+        ideia = st.text_area("Descreva sua sugestão:", height=150, help='Dica: Não se preocupe em escrever bonito.')
+        local = st.text_input("Localização:", help='Dica: Bairro, Rua, Próximo a qual local, Número...')
+        area = st.multiselect("Área:", ["Saúde", "Agricultura & Zona Rural", "Meio Ambiente" "Educação & Cultura", "Obras", "Lazer", "Segurança", "Trânsito", "Empregabilidade", "Tecnologia", "Outros"])
+        dest = st.selectbox("Para qual vereador?", ["Escolha um vereador..."] + LISTA_VEREADORES)
+
+        # --- TERMOS DE USO ADICIONADOS AQUI ---
+        st.markdown("---")
+        st.markdown("### Termos de Uso")
+        st.caption("""
+        Ao enviar sua sugestão, você concorda que ela será, primeiramente, analisada.
+        
+        Você confirma que sua proposta é uma sugestão construtiva ou ideia focada na melhoria de Espumoso (competência municipal), conforme descrito no início do formulário, e não uma reclamação, denúncia ou manifestação sobre assuntos gerais.
+        
+        No entanto, o envio não garante a implementação da ideia. As sugestões serão avaliadas de acordo com sua viabilidade, impacto e prioridades do município. Agradecemos sua participação e compromisso com o desenvolvimento da nossa cidade!
+        """)
+        
+        termos = st.checkbox("Li e concordo com os termos acima.")
+        
         
         if st.form_submit_button("Enviar"):
             if termos and ideia and dest != "Escolha...":
