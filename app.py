@@ -7,7 +7,7 @@ from datetime import datetime
 from groq import Groq
 
 # --- CONFIGURAÇÃO DA PÁGINA ---
-st.set_page_config(page_title="Legislativo Digital", page_icon="🏛️", layout="wide")
+st.set_page_config(page_title="Gabinete Digital", page_icon="🏛️", layout="wide")
 
 # --- CONFIGURAÇÃO DA IA ---
 try:
@@ -263,7 +263,7 @@ def botao_copiar_para_clipboard(texto, label="📋 Copiar texto", height=70):
 if os.path.exists("brasao.png"):
     st.sidebar.image("brasao.png", width=120)
 
-st.sidebar.title("Legislativo Digital | Espumoso")
+st.sidebar.title("Gabinete Digital | Espumoso")
 st.sidebar.markdown("**Câmara Municipal de Espumoso**")
 st.sidebar.markdown("Rio Grande do Sul")
 st.sidebar.markdown("[🌐 Site Oficial](https://www.camaraespumoso.rs.gov.br)")
@@ -294,7 +294,7 @@ st.sidebar.caption("©2025 Câmara de Espumoso")
 
 # --- TELA: INÍCIO ---
 if modo == "🏠 Início":
-    st.title("Legislativo Digital")
+    st.title("Gabinete Digital")
     st.write("Bem-vindo ao ambiente digital do Poder Legislativo de Espumoso! Toque em uma das opções abaixo para começar:")
     st.divider()
 
