@@ -714,10 +714,6 @@ elif modo == "🔐 Área do Vereador":
 # --- TELA: BANCO DE IDEIAS (PÚBLICA) ---
 elif modo == "💡 Banco de Ideias":
     
-    # --- NOVO: Inicializa a flag de sucesso ---
-    if 'sucesso_ideia' not in st.session_state:
-        st.session_state['sucesso_ideia'] = False
-
     def voltar_inicio():
         st.session_state.navegacao = "🏠 Início"
     st.button("⬅️ Voltar para o Início", on_click=voltar_inicio, key="voltar_ideias")
@@ -725,15 +721,9 @@ elif modo == "💡 Banco de Ideias":
     st.title("Banco de Ideias - Espumoso/RS")
     st.info("Bem-vindo(a)! Envie suas sugestões construtivas para a cidade.")
     
-    # --- EXIBIÇÃO PERSISTENTE DA MENSAGEM (Fora do Form) ---
-    if st.session_state['sucesso_ideia']:
-        # st.balloons() removido para garantir que a mensagem não seja clipada
-        st.success("✅ Sua ideia foi enviada com sucesso! Agradecemos sua participação.")
-        # Opcional: Desliga a flag para o próximo uso
-        st.session_state['sucesso_ideia'] = False 
-    # ---------------------------------------------------
+    # REMOVIDA toda a lógica de st.session_state['sucesso_ideia']
 
-    with st.form("form_ideia_completo", clear_on_submit=False): # clear_on_submit=False para não perder dados
+    with st.form("form_ideia_completo", clear_on_submit=True): # clear_on_submit=True para limpar campos
         st.subheader("1. Sobre Você")
         nome = st.text_input("Seu nome completo:", help="Precisamos dos seus dados apenas para que o Vereador possa, se necessário, entrar em contato para entender melhor a sua ideia. Seus dados estarão protegidos.")
         contato = st.text_input("Seu número de celular:")
@@ -761,18 +751,21 @@ elif modo == "💡 Banco de Ideias":
                 }
                 salvar_ideia(dados)
                 
-                # ATIVA A FLAG E FORÇA O REINÍCIO DO SCRIPT
-                st.session_state['sucesso_ideia'] = True
-                st.rerun()
+                # --- SOLUÇÃO FINAL: TOAST PERSISTENTE ---
+                st.balloons()
+                st.toast("✅ Ideia enviada com sucesso!", icon='🚀')
+                
+                # O RERUN VEM POR ÚLTIMO, MAS O TOAST SOBREVIVE
+                st.rerun() 
                 
             else:
                 st.error("Preencha os campos obrigatórios e aceite os termos.")
 
     st.divider()
     st.subheader("🔐 Área Administrativa")
-    senha = st.text_input("Senha ADM:", type="password")
-    if senha == "123321":
-        st.success("Acesso Liberado!")
+    senha = st.text_input("Senha ADM (Somente números):", type="password")
+    if senha == "12345":
+        st.success("🔓 Acesso Liberado!")
         if os.path.exists(arquivo_ideias):
             df = pd.read_csv(arquivo_ideias)
             st.dataframe(df, use_container_width=True)
