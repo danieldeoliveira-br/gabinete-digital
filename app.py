@@ -381,7 +381,7 @@ elif modo == "💡 Banco de Ideias":
     with st.form("ideia", clear_on_submit=False):
         nome = st.text_input("Nome:")
         contato = st.text_input("Contato:")
-        idade = st.radio("Idade:", ["-18", "18-30", "31-45", "46-60", "60+"], horizontal=True)
+        idade = st.radio("Idade:", ["Menos de 18", "18-30 anos", "31-45 anos", "46-60 anos", "60+"], horizontal=True)
         ideia = st.text_area("Ideia:")
         local = st.text_input("Local:")
         area = st.multiselect("Área:", ["Saúde", "Educação", "Obras", "Outros"])
@@ -397,65 +397,54 @@ elif modo == "💡 Banco de Ideias":
     st.divider()
     st.subheader("🔐 Área Administrativa")
     
-    # Inicializa o estado de login do admin
+    # Verifica login
     if "admin_logado" not in st.session_state:
         st.session_state["admin_logado"] = False
 
-    # --- Se NÃO estiver logado, mostra o FORMULÁRIO DE LOGIN ---
+    # TELA DE LOGIN (Formulário único para não duplicar senha)
     if not st.session_state["admin_logado"]:
         with st.form("login_admin_form"):
-            # Adicionamos key="senha_adm_input" para evitar conflitos de duplicação
-            senha = st.text_input("Senha ADM (Somente números):", type="password", key="senha_adm_input") 
-            enviou = st.form_submit_button("Acessar")
-
-        if enviou:
-            if senha == "12345":
-                st.session_state["admin_logado"] = True
-                st.rerun()
-            else:
-                st.error("Senha incorreta.")
+            senha = st.text_input("Senha ADM (Somente números):", type="password")
+            if st.form_submit_button("Acessar"):
+                if senha == "12345":
+                    st.session_state["admin_logado"] = True
+                    st.rerun()
+                else:
+                    st.error("Senha incorreta.")
     
-    # --- Se JÁ estiver logado, mostra os dados ---
+    # TELA LOGADA (Tabela Editável)
     else:
-        col_msg, col_btn = st.columns([3, 1])
-        with col_msg:
-            st.success("🔓 Acesso Liberado! (Modo Edição)")
-        with col_btn:
-            if st.button("Sair do Painel ADM"):
-                st.session_state["admin_logado"] = False
-                st.rerun()
-
-        st.markdown("---")
-        st.subheader("📋 Gerenciamento de Ideias Recebidas")
-        st.caption("Tabela com os registros do Banco de Ideias. Para limpar os dados de teste, use o botão 'Apagar' abaixo.")
-
+        if st.button("Sair Admin"):
+            st.session_state["admin_logado"] = False
+            st.rerun()
+            
         if os.path.exists(arquivo_ideias):
-            df_ideias = pd.read_csv(arquivo_ideias)
+            df = pd.read_csv(arquivo_ideias)
             
-            # --- MOSTRA A TABELA ---
-            st.dataframe(df_ideias, use_container_width=True) 
+            st.info("📝 Para apagar uma linha: Selecione-a e aperte DELETE no teclado. Depois clique em SALVAR.")
             
-            # Botões de Ação
-            col_download, col_delete = st.columns([1, 1])
-
-            with col_download:
-                csv = df_ideias.to_csv(index=False).encode('utf-8')
+            # --- TABELA EDITÁVEL (Igual ao Mural) ---
+            df_editado = st.data_editor(
+                df, 
+                num_rows="dynamic", # ISSO PERMITE ADICIONAR/REMOVER LINHAS
+                key="editor_ideias_admin", 
+                use_container_width=True
+            )
+            
+            c1, c2 = st.columns(2)
+            with c1:
+                if st.button("💾 Salvar Alterações na Tabela", use_container_width=True):
+                    # Salva o que você viu na tela (df_editado) no arquivo
+                    df_editado.to_csv(arquivo_ideias, index=False)
+                    st.success("Tabela atualizada com sucesso!")
+                    st.rerun()
+            with c2:
                 st.download_button(
-                    "📥 Baixar Relatório Completo", 
-                    data=csv, 
-                    file_name="ideias_completas.csv", 
+                    "📥 Baixar CSV", 
+                    data=df.to_csv(index=False).encode('utf-8'), 
+                    file_name="ideias.csv", 
                     mime="text/csv", 
                     use_container_width=True
                 )
-                
-            with col_delete:
-                if st.button("🗑️ APAGAR TODOS OS DADOS DE TESTE", use_container_width=True, type="primary"):
-                    try:
-                        os.remove(arquivo_ideias)
-                        st.error("Todos os dados de ideias foram removidos com sucesso. A tabela será recarregada.")
-                        st.rerun()
-                    except Exception as e:
-                        st.error(f"Erro ao apagar o arquivo. Ação não concluída. {e}")
-            
         else:
             st.info("Nenhuma ideia registrada ainda.")
