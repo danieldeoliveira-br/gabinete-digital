@@ -330,60 +330,68 @@ elif modo == "👤 Gabinete Virtual":
             st.info("Mural ainda não foi iniciado.")
 
 # --- TELA: BANCO DE IDEIAS ---
+# --- TELA: BANCO DE IDEIAS (PÚBLICA) ---
 elif modo == "💡 Banco de Ideias":
     def voltar_inicio():
         st.session_state.navegacao = "🏠 Início"
     st.button("⬅️ Voltar para o Início", on_click=voltar_inicio, key="voltar_ideias")
+
+    st.title("Banco de Ideias - Espumoso/RS")
+    st.info("Bem-vindo(a)! Envie suas sugestões construtivas para a cidade.")
     
-    st.header("💡 Banco de Ideias e Sugestões Comunitárias")
-    st.info("Utilize este canal para enviar sua sugestão. Todas as propostas são encaminhadas aos vereadores para análise e possível conversão em proposições legislativas.")
-
-    with st.form("form_ideias"):
-        st.subheader("Seus Dados")
-        nome = st.text_input("Seu Nome Completo (Opcional):")
-        contato = st.text_input("Seu Contato (Email ou Telefone/WhatsApp - Opcional):")
+    with st.form("form_ideia_completo", clear_on_submit=True):
+        st.subheader("1. Sobre Você")
+        nome = st.text_input("Seu nome completo:", help="Precisamos dos seus dados apenas para que o Vereador possa, se necessário, entrar em contato para entender melhor a sua ideia. Seus dados estarão protegidos.")
+        contato = st.text_input("Seu número de celular:")
         
-        st.subheader("Sua Ideia")
-        ideia = st.text_area("Descreva sua sugestão/ideia (Obrigatório):", height=150)
-        contribuicao = st.text_area("Por que sua ideia é importante para Espumoso?", height=100)
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            localizacao = st.text_input("Qual bairro/área é afetada?")
-        with col2:
-            areas = st.multiselect("Áreas relacionadas (Opcional):", ["Saúde", "Educação", "Infraestrutura", "Meio Ambiente", "Segurança", "Outro"])
-
-        vereador_destino = st.selectbox("Deseja direcionar a sugestão a um vereador específico? (Opcional):", ["Nenhum"] + LISTA_VEREADORES)
+        st.subheader("2. Sua Ideia")
+        ideia_desc = st.text_area("Descreva sua sugestão:", height=150, help='Dica: Não se preocupe em escrever bonito.')
+        contribuição = st.text_area("Como isso ajuda a comunidade?", height=100)
+        localizacao = st.text_input("Localização:")
+        areas = st.multiselect("Áreas:", ["Saúde", "Educação", "Obras", "Lazer", "Segurança", "Trânsito", "Outros"])
 
         st.markdown("---")
-        concordou_termos = st.checkbox("Li e concordo que minha ideia será pública e poderá ser utilizada como base para projetos de lei.", value=True)
+        st.subheader("3. Destino")
+        vereador = st.selectbox("Para qual vereador?", ["Escolha um vereador..."] + LISTA_VEREADORES)
 
-        if st.form_submit_button("Enviar Ideia 🚀"):
-            if ideia and concordou_termos:
+        st.markdown("---")
+        termos = st.checkbox("Li e concordo com os termos.")
+        
+        if st.form_submit_button("🚀 Enviar"):
+            if termos and ideia_desc and vereador != "Escolha um vereador...":
                 dados = {
-                    "Data": datetime.now().strftime("%d/%m/%Y"),
-                    "Nome": nome,
-                    "Contato": contato,
-                    "Ideia": ideia,
-                    "Contribuição": contribuicao,
-                    "Localização": localizacao,
-                    "Áreas": ", ".join(areas),
-                    "Vereador Destino": vereador_destino,
-                    "Concordou Termos": concordou_termos
+                    "Data": datetime.now().strftime("%d/%m/%Y %H:%M"),
+                    "Nome": nome, "Contato": contato, "Ideia": ideia_desc,
+                    "Contribuição": contribuicao, "Localização": localizacao,
+                    "Áreas": ", ".join(areas), "Vereador Destino": vereador, "Concordou Termos": "Sim"
                 }
                 salvar_ideia(dados)
-                st.success("Sua ideia foi enviada com sucesso ao Banco de Ideias! Agradecemos sua participação.")
+                st.balloons()
+                st.success("Enviado com sucesso!")
+                st.rerun() # Recarrega para limpar formulário
             else:
-                st.error("Por favor, descreva sua ideia e confirme que concorda com os termos.")
+                st.error("Preencha os campos obrigatórios e aceite os termos.")
 
+    # --- ÁREA ADMINISTRATIVA (RESTAURADA) ---
     st.divider()
-    st.subheader("Banco de Ideias (Transparência)")
+    st.subheader("🔐 Área Administrativa")
+    senha = st.text_input("Senha ADM:", type="password")
     
-    if os.path.exists(arquivo_ideias):
-        df_ideias = pd.read_csv(arquivo_ideias)
-        st.dataframe(df_ideias, use_container_width=True)
-    else:
-        st.info("Nenhuma ideia registrada ainda.")
+    # Lógica do botão entrar (mesmo que seja só ENTER)
+    if senha:
+        if senha == "admin123":
+            st.success("Acesso Liberado!")
+            if os.path.exists(arquivo_ideias):
+                df = pd.read_csv(arquivo_ideias)
+                st.dataframe(df, use_container_width=True)
+                
+                # Botão de Download
+                csv = df.to_csv(index=False).encode('utf-8')
+                st.download_button("📥 Baixar Relatório", data=csv, file_name="ideias.csv", mime="text/csv")
+            else:
+                st.info("Nenhuma ideia registrada ainda.")
+        elif senha != "admin123":
+             st.error("Senha incorreta.")
 
 # --- TELA: ÁREA DO VEREADOR (RESTRITA) ---
 elif modo == "🔐 Área do Vereador":
