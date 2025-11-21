@@ -311,7 +311,7 @@ elif modo == "🔐 Área do Vereador":
         
         with aba_ia:
             st.header("Elaboração de Documentos")
-            autor_selecionado = st.selectbox("Autor da Proposição:", [autor_sessao], disabled=True)
+            autor_selecionado = st.selectbox("Autor da Proposição:", LISTA_VEREADORES)
             tipo_doc = st.selectbox("Tipo:", ["Pedido de Providência", "Pedido de Informação", "Indicação", "Projeto de Lei", "Moção de Aplauso", "Moção de Pesar"])
             
             if tipo_doc == "Projeto de Lei":
@@ -321,40 +321,26 @@ elif modo == "🔐 Área do Vereador":
             
             if st.button("📝 Elaborar Proposição"):
                 if texto_input:
-                    with st.spinner('Redigindo...'):
-                        texto_final = gerar_documento_ia(autor_sessao, tipo_doc, texto_input) # Usa o autor logado
+                    with st.spinner('Redigindo documento com rigor técnico...'):
+                        texto_final = gerar_documento_ia(autor_selecionado, tipo_doc, texto_input)
                         st.session_state['minuta_pronta'] = texto_final
             
             # 2. SAÍDA (Aparece somente se houver texto gerado)
             if 'minuta_pronta' in st.session_state:
                 st.subheader("Minuta Gerada:")
                 
-                # Exibe a minuta na caixa de texto
+                # O BOTÃO DISCRETO DE COPIA VOLTA AQUI (st.code tem ícone nativo)
                 minuta_para_copia = st.session_state['minuta_pronta']
-                st.text_area("Texto Final da Minuta:", value=minuta_para_copia, height=500, label_visibility="collapsed")
+                st.code(minuta_para_copia, language="markdown")
                 
-                # Botões de Ação Final
-                col_copy, col_softcam = st.columns([1, 1])
-                
-                with col_copy:
-                    # O BOTÃO FINAL DE DOWNLOAD/COPIA SIMULADA (O mais robusto)
-                    st.download_button(
-                        label="📋 COPIAR TEXTO", 
-                        data=minuta_para_copia.encode('utf-8'),
-                        file_name="Minuta_Legislativa.txt",
-                        mime="text/plain",
-                        use_container_width=True,
-                        type="primary"
-                    )
-                
-                with col_softcam:
-                    # Botão para o Softcam
-                    st.link_button(
-                        "🌐 Ir para o Softcam", 
-                        "https://www.camaraespumoso.rs.gov.br/softcam/", 
-                        type="primary", 
-                        use_container_width=True
-                    )
+                # Botão de Ação Final (Apenas Softcam)
+                st.markdown("---")
+                st.link_button(
+                    "🌐 Ir para o Softcam", 
+                    "https://www.camaraespumoso.rs.gov.br/softcam/", 
+                    type="primary", 
+                    use_container_width=True
+                )
             else:
                 st.info("Aguardando a elaboração da minuta. Preencha o detalhamento acima.")
         
