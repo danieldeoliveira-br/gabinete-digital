@@ -768,7 +768,7 @@ elif modo == "💡 Banco de Ideias":
     st.divider()
     st.subheader("🔐 Área Administrativa")
     senha = st.text_input("Senha ADM:", type="password")
-    if senha == "admin123":
+    if senha == "123321":
         st.success("Acesso Liberado!")
         if os.path.exists(arquivo_ideias):
             df = pd.read_csv(arquivo_ideias)
