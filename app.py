@@ -265,13 +265,13 @@ if modo == "🏠 Início":
     # OBS: Substitua os links abaixo pelos endereços reais da Câmara!
     
     with col_fb:
-        st.markdown("[#### 📘 Facebook](https://facebook.com/camaraespumoso)")
+        st.markdown("[📘 Facebook](https://facebook.com/camaraespumoso)")
     with col_ig:
-        st.markdown("[#### 📸 Instagram](https://instagram.com/camaraespumoso)")
+        st.markdown("[📸 Instagram](https://instagram.com/camaraespumoso)")
     with col_yt:
-        st.markdown("[#### ▶️ YouTube](https://youtube.com/@camaraespumoso)")
+        st.markdown("[▶️ YouTube](https://youtube.com/@camaraespumoso)")
     with col_wa_site:
-        st.markdown("[#### 🌐 Site Oficial](https://www.camaraespumoso.rs.gov.br)") # Mantém o link para o site aqui também
+        st.markdown("[🌐 Site Oficial](https://www.camaraespumoso.rs.gov.br)") # Mantém o link para o site aqui também
     
     st.divider()
 
