@@ -329,7 +329,6 @@ elif modo == "👤 Gabinete Virtual":
         else:
             st.info("Mural ainda não foi iniciado.")
 
-# --- TELA: BANCO DE IDEIAS ---
 # --- TELA: BANCO DE IDEIAS (PÚBLICA) ---
 elif modo == "💡 Banco de Ideias":
     def voltar_inicio():
@@ -346,7 +345,7 @@ elif modo == "💡 Banco de Ideias":
         
         st.subheader("2. Sua Ideia")
         ideia_desc = st.text_area("Descreva sua sugestão:", height=150, help='Dica: Não se preocupe em escrever bonito.')
-        contribuição = st.text_area("Como isso ajuda a comunidade?", height=100)
+        contribuicao = st.text_area("Como isso ajuda a comunidade?", height=100)
         localizacao = st.text_input("Localização:")
         areas = st.multiselect("Áreas:", ["Saúde", "Educação", "Obras", "Lazer", "Segurança", "Trânsito", "Outros"])
 
@@ -372,26 +371,45 @@ elif modo == "💡 Banco de Ideias":
             else:
                 st.error("Preencha os campos obrigatórios e aceite os termos.")
 
-    # --- ÁREA ADMINISTRATIVA (RESTAURADA) ---
+    # --- ÁREA ADMINISTRATIVA ---
     st.divider()
     st.subheader("🔐 Área Administrativa")
-    senha = st.text_input("Senha ADM:", type="password")
     
-    # Lógica do botão entrar (mesmo que seja só ENTER)
-    if senha:
-        if senha == "admin123":
-            st.success("Acesso Liberado!")
-            if os.path.exists(arquivo_ideias):
-                df = pd.read_csv(arquivo_ideias)
-                st.dataframe(df, use_container_width=True)
-                
-                # Botão de Download
-                csv = df.to_csv(index=False).encode('utf-8')
-                st.download_button("📥 Baixar Relatório", data=csv, file_name="ideias.csv", mime="text/csv")
+    # Inicializa o estado de login do admin
+    if "admin_logado" not in st.session_state:
+        st.session_state["admin_logado"] = False
+
+    # --- Se NÃO estiver logado, mostra o FORMULÁRIO DE LOGIN ---
+    if not st.session_state["admin_logado"]:
+        with st.form("admin_login_form"):
+            # Usando type="password" para mascarar, mas a senha é numérica: 12345
+            senha = st.text_input("Senha ADM (Somente números):", type="password") 
+            enviou = st.form_submit_button("Acessar")
+
+        if enviou:
+            if senha == "12345":
+                st.session_state["admin_logado"] = True
+                st.rerun()
             else:
-                st.info("Nenhuma ideia registrada ainda.")
-        elif senha != "admin123":
-             st.error("Senha incorreta.")
+                st.error("Senha incorreta.")
+    
+    # --- Se JÁ estiver logado, mostra os dados ---
+    else:
+        st.success("🔓 Acesso Liberado!")
+        
+        if st.button("Sair do Painel ADM"):
+            st.session_state["admin_logado"] = False
+            st.rerun()
+
+        if os.path.exists(arquivo_ideias):
+            df = pd.read_csv(arquivo_ideias)
+            st.dataframe(df, use_container_width=True)
+            
+            # Botão de Download
+            csv = df.to_csv(index=False).encode('utf-8')
+            st.download_button("📥 Baixar Relatório", data=csv, file_name="ideias.csv", mime="text/csv")
+        else:
+            st.info("Nenhuma ideia registrada ainda.")
 
 # --- TELA: ÁREA DO VEREADOR (RESTRITA) ---
 elif modo == "🔐 Área do Vereador":
