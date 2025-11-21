@@ -64,10 +64,13 @@ def salvar_historico(autor, tipo, assunto, texto_minuta, versao_id, revisao_num)
     df.to_csv(arquivo_historico, index=False)
 
 def salvar_ideia(dados):
+    """Salva uma nova ideia no Banco de Ideias."""
     if not os.path.exists(arquivo_ideias):
-        df = pd.DataFrame(columns=["Data", "Nome", "Contato", "Ideia", "Contribuição", "Localização", "Áreas", "Idade", "Vereador Destino", "Concordou Termos"])
+        # Adicionei "Contribuição" na lista de colunas
+        df = pd.DataFrame(columns=["Data", "Nome", "Contato", "Idade", "Ideia", "Contribuição", "Localização", "Áreas", "Vereador Destino", "Concordou Termos"])
     else:
         df = pd.read_csv(arquivo_ideias)
+    
     nova_linha = pd.DataFrame([dados])
     df = pd.concat([df, nova_linha], ignore_index=True)
     df.to_csv(arquivo_ideias, index=False)
