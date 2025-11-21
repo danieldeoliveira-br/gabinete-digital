@@ -325,7 +325,7 @@ elif modo == "🔐 Área do Vereador":
                         st.rerun()
             
             if 'minuta_pronta' in st.session_state:
-                st.error("🚨 AVISO LEGAL: IA pode cometer erros. Revise antes de usar.")
+                st.error("🚨 AVISO LEGAL: Este texto é uma sugestão preliminar gerada por Inteligência Artificial (IA) e pode conter erros. Não possui validade jurídica. A responsabilidade pela análise, correção, adequação formal e constitucionalidade final é integralmente do Vereador(a) autor e de sua assessoria.")
                 st.subheader("Minuta Gerada:")
                 
                 st.text_area("Texto Final:", value=st.session_state['minuta_pronta'], height=800)
