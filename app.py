@@ -376,8 +376,9 @@ elif modo == "🔐 Área do Vereador":
             st.info("Edite na tabela e clique em SALVAR para confirmar.")
             
             if os.path.exists(arquivo_mural):
-                df_mural = pd.read_csv(arquivo_mural)
-                df_vereador = df_mural[df_mural["Vereador"] == autor_sessao].copy()
+                # Carrega o DataFrame DO VEREADOR LOGADO para edição
+                df_full_mural = pd.read_csv(arquivo_mural)
+                df_vereador = df_full_mural[df_full_mural["Vereador"] == autor_sessao].copy()
                 
                 if df_vereador.empty:
                     st.info("Você ainda não tem postagens no mural.")
@@ -385,8 +386,17 @@ elif modo == "🔐 Área do Vereador":
                     df_editado = st.data_editor(df_vereador, num_rows="dynamic", use_container_width=True, key="editor_mural")
                     
                     if st.button("💾 Salvar Alterações no Mural"):
-                        df_others = df_full[df_full["Vereador"] != autor_sessao]
+                        # --- CORREÇÃO DE ESCOPO: CARREGA O ARQUIVO AQUI TAMBÉM ---
+                        df_master_atual = pd.read_csv(arquivo_mural)
+                        
+                        # 1. Separa as postagens de OUTROS vereadores
+                        # (Onde estava o NameError, agora corrigido com df_master_atual)
+                        df_others = df_master_atual[df_master_atual["Vereador"] != autor_sessao]
+                        
+                        # 2. Concatena os posts de outros com os posts editados
                         df_combined = pd.concat([df_others, df_editado], ignore_index=True)
+                        
+                        # 3. Salva o DataFrame combinado
                         df_combined.to_csv(arquivo_mural, index=False)
                         st.success("Mural atualizado com sucesso!")
                         st.rerun()
