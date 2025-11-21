@@ -714,6 +714,8 @@ elif modo == "🔐 Área do Vereador":
 # --- TELA: BANCO DE IDEIAS (PÚBLICA) ---
 elif modo == "💡 Banco de Ideias":
     
+    # Remove lógica de estado desnecessária
+
     def voltar_inicio():
         st.session_state.navegacao = "🏠 Início"
     st.button("⬅️ Voltar para o Início", on_click=voltar_inicio, key="voltar_ideias")
@@ -721,9 +723,7 @@ elif modo == "💡 Banco de Ideias":
     st.title("Banco de Ideias - Espumoso/RS")
     st.info("Bem-vindo(a)! Envie suas sugestões construtivas para a cidade.")
     
-    # REMOVIDA toda a lógica de st.session_state['sucesso_ideia']
-
-    with st.form("form_ideia_completo", clear_on_submit=True): # clear_on_submit=True para limpar campos
+    with st.form("form_ideia_completo", clear_on_submit=False): # clear_on_submit=False para não perder dados, e para não limpar no sucesso
         st.subheader("1. Sobre Você")
         nome = st.text_input("Seu nome completo:", help="Precisamos dos seus dados apenas para que o Vereador possa, se necessário, entrar em contato para entender melhor a sua ideia. Seus dados estarão protegidos.")
         contato = st.text_input("Seu número de celular:")
@@ -751,11 +751,9 @@ elif modo == "💡 Banco de Ideias":
                 }
                 salvar_ideia(dados)
                 
-                # --- SOLUÇÃO FINAL: TOAST PERSISTENTE ---
-                st.toast("✅ Ideia enviada com sucesso!", icon='🚀')
-                
-                # O RERUN VEM POR ÚLTIMO, MAS O TOAST SOBREVIVE
-                st.rerun() 
+                # A Confirmação Visual agora está aqui e SEM RERUN DESTRUTIVO
+                st.balloons()
+                st.success("✅ Sua ideia foi enviada com sucesso! Os campos devem ser limpos manualmente para um novo envio.")
                 
             else:
                 st.error("Preencha os campos obrigatórios e aceite os termos.")
