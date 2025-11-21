@@ -26,7 +26,7 @@ LISTA_VEREADORES = [
     "Vereador Tomas Fiuza (PROGRESSISTAS)"
 ]
 
-# --- FUNÇÃO: REDATOR IA (COM ESPAÇAMENTO FORÇADO) ---
+# --- FUNÇÃO: REDATOR IA ---
 def gerar_documento_ia(autor, tipo_doc, assunto):
     if not api_key:
         return "⚠️ ERRO: A chave da API não foi encontrada nos Secrets!"
@@ -93,7 +93,6 @@ def gerar_documento_ia(autor, tipo_doc, assunto):
         return chat_completion.choices[0].message.content
     except Exception as e:
         return f"Ops, deu erro na IA: {e}"
-
 
 # --- FUNÇÕES DE BANCO DE DADOS ---
 arquivo_ideias = "banco_de_ideias.csv"
@@ -272,7 +271,6 @@ elif modo == "🔐 Área do Vereador":
         st.session_state.navegacao = "🏠 Início"
     st.button("⬅️ Voltar para o Início", on_click=voltar_inicio, key="voltar_assistente")
 
-    # Inicializa ou mantém o estado de acesso
     if "acesso_vereador" not in st.session_state:
         st.session_state["acesso_vereador"] = False
     if "vereador_logado" not in st.session_state:
@@ -283,15 +281,13 @@ elif modo == "🔐 Área do Vereador":
         st.header("🔒 Acesso Restrito - Identificação")
         st.warning("Selecione seu nome e insira a senha de acesso da assessoria.")
 
-        # Campo para identificação ANTES do login
         vereador_identificado = st.selectbox("Eu sou:", ["Selecione seu nome..."] + LISTA_VEREADORES)
         senha_digitada = st.text_input("Digite a senha de acesso:", type="password")
 
         if st.button("Entrar"):
-            # Verifica se o vereador foi selecionado e a senha está correta
             if vereador_identificado != "Selecione seu nome..." and senha_digitada == "camara2025":
                 st.session_state["acesso_vereador"] = True
-                st.session_state["vereador_logado"] = vereador_identificado # Armazena a identidade
+                st.session_state["vereador_logado"] = vereador_identificado 
                 st.rerun()
             else:
                 st.error("Falha na autenticação. Verifique a senha e se o nome foi selecionado.")
@@ -323,27 +319,34 @@ elif modo == "🔐 Área do Vereador":
             if st.button("📝 Elaborar Proposição"):
                 if texto_input:
                     with st.spinner('Redigindo documento com rigor técnico...'):
-                        texto_final = gerar_documento_ia(autor_selecionado, tipo_doc, texto_input)
+                        texto_final = gerar_documento_ia(autor_sessao, tipo_doc, texto_input)
                         st.session_state['minuta_pronta'] = texto_final
             
-            # 2. SAÍDA
+            # 2. SAÍDA (Aparece somente se houver texto gerado)
             if 'minuta_pronta' in st.session_state:
                 st.subheader("Minuta Gerada:")
                 
+                # Exibe a minuta na caixa de texto
                 minuta_para_copia = st.session_state['minuta_pronta']
-                st.code(minuta_para_copia, language="markdown") # A caixa de texto com o ícone de cópia
-                
-                # --- INSTRUÇÃO DE COPIA (AGORA APARECE BEM CLARO ABAIXO) ---
-                st.info("Clique no ícone de cópia (no canto superior direito do bloco de texto) para transferir a minuta integral.")
+                st.text_area("Texto Final da Minuta:", value=minuta_para_copia, height=500, label_visibility="collapsed") # TEXT AREA DE VOLTA AQUI
                 
                 # Botões de Ação Final
-                st.markdown("---")
-                st.link_button(
-                    "🌐 Ir para o Softcam", 
-                    "https://www.camaraespumoso.rs.gov.br/softcam/", 
-                    type="primary", 
-                    use_container_width=True
-                )
+                col_copy, col_softcam = st.columns([1, 1])
+                
+                with col_copy:
+                    # FIX: O BOTÃO DE DOWNLOAD COM O RÓTULO DE COPIA É REMOVIDO
+                    # E SUBSTITUÍDO PELO TEXTO ABAIXO QUE USA O NATIVO ST.CODE
+                    st.code(minuta_para_copia, language="markdown")
+                
+                with col_softcam:
+                    # Botão para o Softcam
+                    st.link_button(
+                        "🌐 Ir para o Softcam", 
+                        "https://www.camaraespumoso.rs.gov.br/softcam/", 
+                        type="primary", 
+                        use_container_width=True
+                    )
+                st.info("💡 Use o ícone de cópia (no canto superior direito do bloco de texto) para transferir a minuta integral. Use o botão do Softcam para ir ao sistema.")
             else:
                 st.info("Aguardando a elaboração da minuta. Preencha o detalhamento acima.")
         
@@ -352,7 +355,6 @@ elif modo == "🔐 Área do Vereador":
             st.write(f"Você está postando como **{autor_sessao}**.")
             
             with st.form("form_post_mural"):
-                # FIX: O selectbox usa APENAS o nome do vereador logado e é DESABILITADO
                 autor_post = st.selectbox("Quem está postando?", [autor_sessao], disabled=True)
                 titulo_post = st.text_input("Título da Publicação (Ex: Visita à Escola X)")
                 mensagem_post = st.text_area("Texto da Publicação", height=150)
@@ -373,27 +375,20 @@ elif modo == "🔐 Área do Vereador":
             
             st.divider()
             st.subheader("🗑️ Editar ou Excluir Postagens Antigas")
-            st.info("Você só pode editar ou excluir suas próprias postagens. Edite na tabela e clique em SALVAR para confirmar.")
+            st.info("Edite na tabela e clique em SALVAR para confirmar.")
             
             if os.path.exists(arquivo_mural):
-                # FILTRA PARA MOSTRAR APENAS AS POSTAGENS DO VEREADOR LOGADO
-                df_full = pd.read_csv(arquivo_mural)
-                df_vereador = df_full[df_full["Vereador"] == autor_sessao].copy()
+                df_mural = pd.read_csv(arquivo_mural)
+                df_vereador = df_mural[df_mural["Vereador"] == autor_sessao].copy()
                 
                 if df_vereador.empty:
                     st.info("Você ainda não tem postagens no mural.")
                 else:
-                    # Permite a edição (incluindo exclusão de linhas)
                     df_editado = st.data_editor(df_vereador, num_rows="dynamic", use_container_width=True, key="editor_mural")
                     
                     if st.button("💾 Salvar Alterações no Mural"):
-                        # 1. Separa as postagens de OUTROS vereadores
                         df_others = df_full[df_full["Vereador"] != autor_sessao]
-                        
-                        # 2. Concatena as postagens de outros com as postagens editadas (do autor logado)
                         df_combined = pd.concat([df_others, df_editado], ignore_index=True)
-                        
-                        # 3. Salva o DataFrame combinado (com as edições)
                         df_combined.to_csv(arquivo_mural, index=False)
                         st.success("Mural atualizado com sucesso!")
                         st.rerun()
