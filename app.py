@@ -436,6 +436,16 @@ elif modo == "💡 Banco de Ideias":
         nome = st.text_input("Seu nome completo:", help="Precisamos dos seus dados apenas para que o Vereador possa, se necessário, entrar em contato para entender melhor a sua ideia. Seus dados estarão protegidos.")
         contato = st.text_input("Seu número de celular:")
         
+        # --- CAMPO IDADE ---
+        st.markdown("---")
+        st.markdown("**Qual a sua idade?**")
+        st.caption("Esta informação nos ajuda muito! É usada apenas para estatística (de forma anônima).")
+        idade = st.radio(
+            "Faixa etária:", 
+            ["Menos de 18 anos", "18 a 30 anos", "31 a 45 anos", "46 a 60 anos", "Acima de 60 anos"], 
+            horizontal=True
+        )
+        # ----------------------------------
         st.subheader("2. Sua Ideia")
         ideia_desc = st.text_area("Descreva sua sugestão:", height=150, help='Dica: Não se preocupe em escrever bonito.')
         contribuicao = st.text_area("Como isso ajuda a comunidade?", height=100)
