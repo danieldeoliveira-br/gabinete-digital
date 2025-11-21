@@ -767,7 +767,7 @@ elif modo == "💡 Banco de Ideias":
             else:
                 st.error("Preencha os campos obrigatórios e aceite os termos.")
 
-   st.divider()
+    st.divider()
     st.subheader("🔐 Área Administrativa")
     senha = st.text_input("Senha ADM (Somente números):", type="password")
     
@@ -804,33 +804,22 @@ elif modo == "💡 Banco de Ideias":
             df_ideias = pd.read_csv(arquivo_ideias)
             
             # --- TABELA INTERATIVA (EDIÇÃO E EXCLUSÃO SELETIVA) ---
-            df_editado = st.data_editor(
-                df_ideias, 
-                num_rows="dynamic", 
-                use_container_width=True, 
-                key="editor_ideias"
-            )
+            df_editado = st.data_editor(df_ideias, num_rows="dynamic", use_container_width=True, key="editor_ideias")
             
             # Botões de Ação
-            col_save, col_download = st.columns([1, 1])
+            col_download, col_save = st.columns([1, 1])
+
+            with col_download:
+                # Botão de Download
+                csv = df_ideias.to_csv(index=False).encode('utf-8')
+                st.download_button("📥 Baixar Relatório Completo", data=csv, file_name="ideias_completas.csv", mime="text/csv", use_container_width=True)
 
             with col_save:
                 if st.button("💾 Salvar Alterações na Tabela", use_container_width=True):
                     # Salva o DataFrame editado de volta ao CSV
                     df_editado.to_csv(arquivo_ideias, index=False)
                     st.success("Tabela de ideias atualizada com sucesso!")
-                    st.rerun() # Reinicia para consolidar e mostrar os dados limpos
-
-            with col_download:
-                 # Botão de Download (permanece funcional)
-                csv = df_ideias.to_csv(index=False).encode('utf-8')
-                st.download_button(
-                    "📥 Baixar Relatório Completo", 
-                    data=csv, 
-                    file_name="ideias_completas.csv", 
-                    mime="text/csv", 
-                    use_container_width=True
-                )
+                    st.rerun() # Reinicia para limpar o estado de edição
             
         else:
             st.info("Nenhuma ideia registrada ainda.")
