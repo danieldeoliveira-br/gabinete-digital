@@ -549,18 +549,25 @@ elif modo == "🔐 Área do Vereador":
             st.header("Elaboração de Documentos")
             autor_sessao = st.session_state["vereador_logado"]
             
-            # --- NOVA LÓGICA DE AUTORIZAÇÃO ---
+            # --- NOVA LÓGICA DE PERMISSÃO ---
             is_juridico = autor_sessao in LISTA_JURIDICO
             
+            # Define qual lista e estado de seleção usar
             if is_juridico:
-                st.info(f"Usuário logado: **{autor_sessao}**. Selecione o Vereador que será o autor oficial da matéria.")
-                autor_selecionado = st.selectbox("Autor da Proposição:", LISTA_VEREADORES)
+                st.info(f"Usuário logado: **{autor_sessao}**. Selecione o Vereador autor da matéria.")
+                autor_list = LISTA_VEREADORES # Jurídico pode selecionar todos
+                autor_disabled = False
             else:
-                # O Vereador logado é o autor, e o campo fica desabilitado
-                autor_selecionado = st.selectbox("Autor da Proposição:", [autor_sessao], disabled=True)
+                st.info(f"Usuário logado: **{autor_sessao}**. Você é o autor da proposição.")
+                autor_list = [autor_sessao] # Vereador só pode selecionar a si mesmo
+                autor_disabled = True
+
+            # O selectbox agora usa as variáveis definidas acima
+            autor_selecionado = st.selectbox("Autor da Proposição:", autor_list, disabled=autor_disabled)
             # --- FIM DA NOVA LÓGICA ---
-            
+
             tipo_doc = st.selectbox("Tipo:", ["Pedido de Providência", "Pedido de Informação", "Indicação", "Projeto de Lei", "Moção de Aplauso", "Moção de Pesar"])
+            
             if tipo_doc == "Projeto de Lei":
                 st.warning("⚠️ Atenção: A IA evitará Vício de Iniciativa criando leis 'Autorizativas' quando necessário.")
             
@@ -569,19 +576,17 @@ elif modo == "🔐 Área do Vereador":
             if st.button("📝 Elaborar Proposição"):
                 if texto_input:
                     with st.spinner('Redigindo documento com rigor técnico...'):
-                        texto_final = gerar_documento_ia(autor_sessao, tipo_doc, texto_input)
+                        texto_final = gerar_documento_ia(autor_selecionado, tipo_doc, texto_input)
                         
-                        # --- LÓGICA DE HISTÓRICO - NOVA PROPOSIÇÃO (Versão 1) ---
-                        prop_id_novo = datetime.now().strftime("PROP_%Y%m%d%H%M%S") # ID baseado em tempo
+                        prop_id_novo = datetime.now().strftime("PROP_%Y%m%d%H%M%S")
                         st.session_state['prop_id'] = prop_id_novo
                         st.session_state['prop_version_num'] = 1
                         st.session_state['minuta_pronta'] = texto_final
-                        st.session_state['assunto_atual'] = texto_input # Salva o assunto original
-                        st.session_state['tipo_doc_atual'] = tipo_doc # Salva o tipo de documento
+                        st.session_state['assunto_atual'] = texto_input
+                        st.session_state['tipo_doc_atual'] = tipo_doc
                         
-                        # Salva a Versão 1 no histórico
                         salvar_historico(
-                            autor_sessao, 
+                            autor_selecionado, # CRÍTICO: SALVA O AUTOR SELECIONADO, não o logado
                             tipo_doc, 
                             texto_input, 
                             texto_final, 
@@ -691,10 +696,13 @@ elif modo == "🔐 Área do Vereador":
         # --- ABA MURAL (Com correção do NameError) ---
         with aba_mural:
             st.header("📢 Publicar no Gabinete Virtual")
-            st.write(f"Você está postando como **{autor_sessao}**.")
+            
+            # O autor do POST é o USUÁRIO LOGADO, não um vereador
+            st.write(f"Você está postando como **{autor_sessao}**.") 
             
             with st.form("form_post_mural"):
-                autor_post = st.selectbox("Quem está postando?", [autor_sessao], disabled=True)
+                # O CAMPO AUTOR POST DEVE ESTAR TRAVADO NO NOME DO USUÁRIO LOGADO
+                autor_post = st.selectbox("Quem está postando?", [autor_sessao], disabled=True) 
                 titulo_post = st.text_input("Título da Publicação (Ex: Visita à Escola X)")
                 mensagem_post = st.text_area("Texto da Publicação", height=150)
                 
@@ -702,7 +710,7 @@ elif modo == "🔐 Área do Vereador":
                     if titulo_post and mensagem_post:
                         dados_post = {
                             "Data": datetime.now().strftime("%d/%m/%Y"),
-                            "Vereador": autor_sessao,
+                            "Vereador": autor_sessao, # Postagem usa o nome logado
                             "Titulo": titulo_post,
                             "Mensagem": mensagem_post
                         }
