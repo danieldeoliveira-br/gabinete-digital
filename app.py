@@ -332,7 +332,7 @@ elif modo == "🔐 Área do Vereador":
                 # --- SAÍDA DO TEXTO FLEXÍVEL (Corrige a quebra de linha) ---
                 st.text_area("Texto Final da Minuta:", value=minuta_para_copia, height=500)
                 
-                st.info("💡 Para copiar, selecione todo o texto no campo acima (Ctrl+A no PC / Long Press no celular) e use o botão Softcam.")
+                st.info("💡 Para copiar, selecione todo o texto no campo acima (Ctrl+A no computador / Toque Longo no celular) e depois use o botão Softcam para ir ao sistema e colar seu texto.")
                 
                 # Botão Softcam (O único que importa para o fluxo)
                 st.markdown("---")
