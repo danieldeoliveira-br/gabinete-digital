@@ -3,7 +3,6 @@ import pandas as pd
 import os
 from datetime import datetime
 from groq import Groq
-from st_copy_to_clipboard import st_copy_to_clipboard
 
 # --- CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(page_title="Legislativo Digital", page_icon="🏛️", layout="wide")
@@ -14,7 +13,7 @@ try:
 except:
     api_key = ""
 
-# --- LISTA DE VEREADORES E PARTIDO ---
+# --- LISTA DE VEREADORES ---
 LISTA_VEREADORES = [
     "Vereadora Dayana Soares de Camargo (PDT)",
     "Vereador Denner Fernando Duarte Senhor (PL)",
@@ -22,7 +21,7 @@ LISTA_VEREADORES = [
     "Vereadora Fabiana Dolci Otoni (PROGRESSISTAS)",
     "Vereadora Ivone Maria Capitanio Missio (PROGRESSISTAS)",
     "Vereador Leandro Keller Colleraus (PDT)",
-    "Vereadora Marina Camera Machado (PL)",
+    "Vereador Marina Camera Machado (PL)",
     "Vereador Paulo Flores de Moraes (PDT)",
     "Vereador Tomas Fiuza (PROGRESSISTAS)"
 ]
@@ -117,13 +116,12 @@ def salvar_post_mural(dados):
     df = pd.concat([df, nova_linha], ignore_index=True)
     df.to_csv(arquivo_mural, index=False)
 
-# --- FUNÇÃO PARA DEFINIR AVATAR (Simplificada) ---
+# --- FUNÇÃO PARA DEFINIR AVATAR ---
 def obter_avatar_simples(nome):
     if nome.startswith("Vereadora"):
         return "👩"
     else:
         return "👨"
-# --------------------------------------------------
 
 # --- MENU LATERAL ---
 if os.path.exists("brasao.png"):
@@ -159,13 +157,11 @@ st.sidebar.markdown("[**Daniel de Oliveira Colvero**](mailto:daniel.colvero@gmai
 st.sidebar.caption("© 2025 Câmara de Espumoso")
 
 # --- TELA: INÍCIO ---
-# --- TELA: INÍCIO (AGORA COM CARDS DE ALTURA AUTOMÁTICA) ---
 if modo == "🏠 Início":
     st.title("Legislativo Digital")
-    st.write("Bem-vindo ao ambiente digital do Poder Legislativo de Espumoso! Selecione uma ferramenta:")
+    st.write("Bem-vindo ao ambiente digital do Poder Legislativo de Espumoso! Toque em uma das opções abaixo para começar:")
     st.divider()
 
-    # Funções de Callback
     def ir_para_assistente():
         st.session_state.navegacao = "🔐 Área do Vereador"
     def ir_para_ideias():
@@ -175,33 +171,21 @@ if modo == "🏠 Início":
 
     col_a, col_b, col_c = st.columns(3)
     
-    # --- CARD 1: ÁREA DE TRABALHO DO VEREADOR (CORRIGIDO) ---
     with col_a:
-        with st.container(border=True): 
-            st.markdown("## 🔐")
-            st.markdown("#### Área do Vereador")
-            st.caption("Acesso às ferramentas de inteligência artificial (para elaboração de documentos) e gestão do Mural de Atividades.")
-            st.button("Acessar Área Restrita 📝", use_container_width=True, on_click=ir_para_assistente)
+        st.info("🤖 Para Vereadores")
+        st.button("Criar Lei / Documentos 📝", use_container_width=True, on_click=ir_para_assistente)
             
-    # --- CARD 2: BANCO DE IDEIAS ---
     with col_b:
-        with st.container(border=True):
-            st.markdown("## 💡")
-            st.markdown("#### Banco de Ideias")
-            st.caption("Canal direto para sugestões e propostas da comunidade.")
-            st.button("Enviar Ideia / Sugestão 🚀", use_container_width=True, on_click=ir_para_ideias)
+        st.success("💡 Para a Comunidade")
+        st.button("Enviar Ideia / Sugestão 🚀", use_container_width=True, on_click=ir_para_ideias)
 
-    # --- CARD 3: GABINETE VIRTUAL ---
     with col_c:
-        with st.container(border=True):
-            st.markdown("## 🏛️")
-            st.markdown("#### Mural de Notícias")
-            st.caption("Acompanhe as atividades e postagens dos vereadores da Câmara.")
-            st.button("Visitar Mural 👤", use_container_width=True, on_click=ir_para_gabinete)
+        st.warning("🏛️ Gabinetes")
+        st.button("Visitar Gabinete Virtual 👤", use_container_width=True, on_click=ir_para_gabinete)
 
     st.divider()
 
-# --- TELA: GABINETE VIRTUAL (COM FEED E AVATARES) ---
+# --- TELA: GABINETE VIRTUAL ---
 elif modo == "👤 Gabinete Virtual":
     def voltar_inicio():
         st.session_state.navegacao = "🏠 Início"
@@ -275,52 +259,33 @@ elif modo == "👤 Gabinete Virtual":
             st.info("Mural ainda não foi iniciado.")
 
 # --- TELA: ÁREA DO VEREADOR (RESTRITA) ---
-# --- TELA: ÁREA DO VEREADOR (RESTRITA COM IDENTIFICAÇÃO) ---
 elif modo == "🔐 Área do Vereador":
     def voltar_inicio():
         st.session_state.navegacao = "🏠 Início"
     st.button("⬅️ Voltar para o Início", on_click=voltar_inicio, key="voltar_assistente")
 
-    # Inicializa ou mantém o estado de acesso
     if "acesso_vereador" not in st.session_state:
         st.session_state["acesso_vereador"] = False
-    if "vereador_logado" not in st.session_state:
-        st.session_state["vereador_logado"] = None
 
-    # --- LÓGICA DE LOGIN ---
     if not st.session_state["acesso_vereador"]:
-        st.header("🔒 Acesso Restrito - Identificação")
-        st.warning("Selecione seu nome e insira a senha de acesso da assessoria.")
-        
-        # O Vereador deve se identificar antes
-        vereador_identificado = st.selectbox("Eu sou:", ["Selecione seu nome..."] + LISTA_VEREADORES)
+        st.header("🔒 Acesso Restrito")
+        st.warning("Esta ferramenta é exclusiva para Vereadores e Assessores.")
         senha_digitada = st.text_input("Digite a senha de acesso:", type="password")
-        
         if st.button("Entrar"):
-            # Verifica se o vereador foi selecionado e a senha está correta
-            if vereador_identificado != "Selecione seu nome..." and senha_digitada == "camara2025": 
+            if senha_digitada == "camara2025": 
                 st.session_state["acesso_vereador"] = True
-                st.session_state["vereador_logado"] = vereador_identificado # Armazena a identidade
                 st.rerun()
             else:
-                st.error("Falha na autenticação. Verifique a senha e se o nome foi selecionado.")
-    
-    # --- ÁREA LOGADA (Acesso Liberado) ---
+                st.error("Senha incorreta.")
     else:
-        autor_sessao = st.session_state["vereador_logado"]
-        
         if st.button("Sair do Modo Restrito", type="secondary"):
             st.session_state["acesso_vereador"] = False
-            st.session_state["vereador_logado"] = None
             st.rerun()
         
         st.divider()
-        st.success(f"Acesso Liberado para **{autor_sessao}**.")
         
-        # Abas para separar as ferramentas internas
         aba_ia, aba_mural = st.tabs(["⚖️ Criar Documentos (IA)", "📢 Gerenciar Mural"])
         
-        # --- ABA 1: CRIAR DOCUMENTOS ---
         with aba_ia:
             st.header("Elaboração de Documentos")
             autor_selecionado = st.selectbox("Autor da Proposição:", LISTA_VEREADORES)
@@ -336,22 +301,27 @@ elif modo == "🔐 Área do Vereador":
                     with st.spinner('Redigindo documento com rigor técnico...'):
                         texto_final = gerar_documento_ia(autor_selecionado, tipo_doc, texto_input)
                         st.session_state['minuta_pronta'] = texto_final
-
+            
             # 2. SAÍDA (Aparece somente se houver texto gerado)
             if 'minuta_pronta' in st.session_state:
                 st.subheader("Minuta Gerada:")
                 
-                minuta_para_copia = st.session_state['minuta_pronta']
-                
                 # Exibe a minuta na caixa de texto
+                minuta_para_copia = st.session_state['minuta_pronta']
                 st.text_area("Texto Final da Minuta:", value=minuta_para_copia, height=500, label_visibility="collapsed")
                 
-                # --- BOTÕES DE AÇÃO FINAL ---
+                # Botões de Ação Final
                 col_copy, col_softcam = st.columns([1, 1])
                 
                 with col_copy:
-                    # O NOVO BOTÃO GRANDE DE COPIA
-                    st_copy_to_clipboard(minuta_para_copia, label="📋 COPIAR TEXTO", type="primary", success_message="Texto copiado para a área de transferência!")
+                    # O BOTÃO FINAL DE DOWNLOAD/COPIA SIMULADA (O mais robusto)
+                    st.download_button(
+                        label="📋 COPIAR TEXTO", 
+                        data=minuta_para_copia.encode('utf-8'),
+                        file_name="Minuta_Legislativa.txt",
+                        mime="text/plain",
+                        use_container_width=True
+                    )
                 
                 with col_softcam:
                     # Botão para o Softcam
@@ -363,60 +333,17 @@ elif modo == "🔐 Área do Vereador":
                     )
             else:
                 st.info("Aguardando a elaboração da minuta. Preencha o detalhamento acima.")
-        
-        # --- ABA 2: POSTAR NO MURAL ---
-        with aba_mural:
-            st.header("📢 Publicar no Gabinete Virtual")
-            st.write(f"Você está postando como **{autor_sessao}**.")
-            
-            with st.form("form_post_mural"):
-                # O campo de seleção de autor é removido ou travado para o autor logado
-                st.caption(f"Autor da Publicação: {autor_sessao}") 
-                titulo_post = st.text_input("Título da Publicação (Ex: Visita à Escola X)")
-                mensagem_post = st.text_area("Texto da Publicação", height=150)
-                
-                if st.form_submit_button("Publicar no Mural 🚀"):
-                    if titulo_post and mensagem_post:
-                        dados_post = {
-                            "Data": datetime.now().strftime("%d/%m/%Y"),
-                            "Vereador": autor_sessao, # Postagem usa o nome logado
-                            "Titulo": titulo_post,
-                            "Mensagem": mensagem_post
-                        }
-                        salvar_post_mural(dados_post)
-                        st.success("Publicado com sucesso! Veja na aba 'Gabinete Virtual'.")
-                        st.rerun()
-                    else:
-                        st.error("Preencha título e mensagem.")
-            
-            # --- ÁREA DE EDIÇÃO/EXCLUSÃO (Acesso total para o admin da sessão) ---
-            st.divider()
-            st.subheader("🗑️ Gerenciar Todas as Postagens")
-            st.info("Utilize a tabela abaixo para corrigir ou excluir posts antigos.")
-            
-            if os.path.exists(arquivo_mural):
-                df_mural = pd.read_csv(arquivo_mural)
-                # Editor Interativo de Dados
-                df_editado = st.data_editor(df_mural, num_rows="dynamic", use_container_width=True, key="editor_mural")
-                
-                if st.button("💾 Salvar Alterações no Mural"):
-                    df_editado.to_csv(arquivo_mural, index=False)
-                    st.success("Mural atualizado com sucesso!")
-                    st.rerun()
 
-# --- TELA: BANCO DE IDEIAS (PÚBLICA - DADOS RETIDOS) ---
+# --- TELA: BANCO DE IDEIAS (PÚBLICA) ---
 elif modo == "💡 Banco de Ideias":
-    
     def voltar_inicio():
         st.session_state.navegacao = "🏠 Início"
-        
     st.button("⬅️ Voltar para o Início", on_click=voltar_inicio, key="voltar_ideias")
 
     st.title("Banco de Ideias - Espumoso/RS")
     st.info("Bem-vindo(a)! Envie suas sugestões construtivas para a cidade.")
     
-    # REMOVIDO: clear_on_submit=True para reter dados em caso de erro.
-    with st.form("form_ideia_completo"): 
+    with st.form("form_ideia_completo", clear_on_submit=True):
         st.subheader("1. Sobre Você")
         nome = st.text_input("Seu nome completo:", help="Precisamos dos seus dados apenas para que o Vereador possa, se necessário, entrar em contato para entender melhor a sua ideia. Seus dados estarão protegidos.")
         contato = st.text_input("Seu número de celular:")
@@ -424,7 +351,7 @@ elif modo == "💡 Banco de Ideias":
         st.subheader("2. Sua Ideia")
         ideia_desc = st.text_area("Descreva sua sugestão:", height=150, help='Dica: Não se preocupe em escrever bonito.')
         contribuição = st.text_area("Como isso ajuda a comunidade?", height=100)
-        localizacao = st.text_input("Localização:", help='Dica: Nos diga onde o problema está.')
+        localizacao = st.text_input("Localização:")
         areas = st.multiselect("Áreas:", ["Saúde", "Educação", "Obras", "Lazer", "Segurança", "Trânsito", "Outros"])
 
         st.markdown("---")
@@ -435,15 +362,7 @@ elif modo == "💡 Banco de Ideias":
         termos = st.checkbox("Li e concordo com os termos.")
         
         if st.form_submit_button("🚀 Enviar"):
-            if not termos:
-                # O erro aparece, mas o texto preenchido permanece
-                st.error("Você precisa concordar com os termos para enviar.")
-            elif not ideia_desc:
-                st.error("Por favor, descreva sua ideia.")
-            elif vereador == "Escolha um vereador...":
-                st.error("Por favor, escolha um vereador para receber a ideia.")
-            else:
-                # Lógica de salvar (Se deu tudo certo)
+            if termos and ideia_desc and vereador != "Escolha um vereador...":
                 dados = {
                     "Data": datetime.now().strftime("%d/%m/%Y %H:%M"),
                     "Nome": nome, "Contato": contato, "Ideia": ideia_desc,
@@ -452,42 +371,17 @@ elif modo == "💡 Banco de Ideias":
                 }
                 salvar_ideia(dados)
                 st.balloons()
-                st.success("Enviado com sucesso! A página será recarregada para limpar o formulário.")
-                # Recarrega para limpar, mas só depois do sucesso total
-                st.rerun() 
+                st.success("Enviado com sucesso!")
+            else:
+                st.error("Preencha os campos obrigatórios e aceite os termos.")
 
     st.divider()
     st.subheader("🔐 Área Administrativa")
-    
-    # Inicializa o estado de login do admin
-    if "admin_logado" not in st.session_state:
-        st.session_state["admin_logado"] = False
-
-    # --- Se NÃO estiver logado, mostra o FORMULÁRIO DE LOGIN ---
-    if not st.session_state["admin_logado"]:
-        with st.form("admin_login_form"):
-            senha = st.text_input("Senha ADM:", type="password")
-            enviou = st.form_submit_button("Entrar") # O NOVO BOTÃO
-
-        if enviou:
-            if senha == "admin123":
-                st.session_state["admin_logado"] = True
-                st.rerun()
-            else:
-                st.error("Senha incorreta.")
-    
-    # --- Se JÁ estiver logado, mostra os dados ---
-    else:
-        st.success("🔓 Acesso Liberado!")
-        
-        if st.button("Sair do Painel ADM"):
-            st.session_state["admin_logado"] = False
-            st.rerun()
-
+    senha = st.text_input("Senha ADM:", type="password")
+    if senha == "admin123":
+        st.success("Acesso Liberado!")
         if os.path.exists(arquivo_ideias):
             df = pd.read_csv(arquivo_ideias)
             st.dataframe(df, use_container_width=True)
             csv = df.to_csv(index=False).encode('utf-8')
             st.download_button("📥 Baixar Relatório", data=csv, file_name="ideias.csv", mime="text/csv")
-        else:
-            st.info("Nenhuma ideia registrada ainda.")
