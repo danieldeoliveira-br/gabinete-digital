@@ -770,33 +770,56 @@ elif modo == "💡 Banco de Ideias":
     st.divider()
     st.subheader("🔐 Área Administrativa")
     senha = st.text_input("Senha ADM (Somente números):", type="password")
-    if senha == "12345":
-        st.success("🔓 Acesso Liberado!")
+    
+    # Inicializa o estado de login do admin
+    if "admin_logado" not in st.session_state:
+        st.session_state["admin_logado"] = False
+
+    # Se NÃO estiver logado, mostra o FORMULÁRIO DE LOGIN
+    if not st.session_state["admin_logado"]:
+        with st.form("admin_login_form"):
+            senha = st.text_input("Senha ADM (Somente números):", type="password") 
+            enviou = st.form_submit_button("Acessar")
+
+        if enviou:
+            if senha == "123321":
+                st.session_state["admin_logado"] = True
+                st.rerun()
+            else:
+                st.error("Senha incorreta.")
+    
+    # Se JÁ estiver logado, mostra os dados
+    else:
+        st.success("🔓 Acesso Liberado! (Edição de Dados)")
         
-        # O arquivo onde as ideias são salvas
-        arquivo_ideias = "ideias.csv" 
-        
+        if st.button("Sair do Painel ADM"):
+            st.session_state["admin_logado"] = False
+            st.rerun()
+
+        st.markdown("---")
+        st.subheader("📋 Gerenciamento de Ideias Recebidas")
+        st.caption("Você pode editar células diretamente na tabela ou selecionar uma linha para apagá-la (Delete).")
+
         if os.path.exists(arquivo_ideias):
-            df = pd.read_csv(arquivo_ideias)
+            df_ideias = pd.read_csv(arquivo_ideias)
             
-            # 1. EXIBIÇÃO DA TABELA
-            st.dataframe(df, use_container_width=True)
+            # --- TABELA INTERATIVA (EDIÇÃO E EXCLUSÃO SELETIVA) ---
+            df_editado = st.data_editor(df_ideias, num_rows="dynamic", use_container_width=True, key="editor_ideias")
             
-            # 2. BOTÃO DE DOWNLOAD
-            csv = df.to_csv(index=False).encode('utf-8')
-            st.download_button("📥 Baixar Relatório", data=csv, file_name="ideias.csv", mime="text/csv")
+            # Botões de Ação
+            col_download, col_save = st.columns([1, 1])
+
+            with col_download:
+                # Botão de Download
+                csv = df_ideias.to_csv(index=False).encode('utf-8')
+                st.download_button("📥 Baixar Relatório Completo", data=csv, file_name="ideias_completas.csv", mime="text/csv", use_container_width=True)
+
+            with col_save:
+                if st.button("💾 Salvar Alterações na Tabela", use_container_width=True):
+                    # Salva o DataFrame editado de volta ao CSV
+                    df_editado.to_csv(arquivo_ideias, index=False)
+                    st.success("Tabela de ideias atualizada com sucesso!")
+                    st.rerun() # Reinicia para limpar o estado de edição
             
-            st.markdown("---")
-            st.warning("⚠️ **ATENÇÃO:** Esta ação apagará permanentemente todos os dados do Banco de Ideias (o arquivo CSV) do servidor.")
-            
-            # 3. NOVO BLOCO: BOTÃO DE EXCLUSÃO
-            if st.button("🗑️ APAGAR TODOS OS DADOS DO BANCO DE IDEIAS", type="primary"):
-                try:
-                    os.remove(arquivo_ideias)
-                    st.error("Dados de ideias apagados com sucesso! O formulário está vazio.")
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"Erro ao apagar o arquivo: {e}")
-                    
         else:
-            st.info("Nenhuma ideia encontrada no servidor para download ou exclusão.")
+            st.info("Nenhuma ideia registrada ainda.")
