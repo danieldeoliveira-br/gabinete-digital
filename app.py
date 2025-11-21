@@ -30,7 +30,7 @@ LISTA_VEREADORES = [
 # --- ARQUIVOS DE DADOS GLOBAIS ---
 arquivo_ideias = "banco_de_ideias.csv"
 arquivo_mural = "mural_posts.csv"
-arquivo_historico = "historico_proposicoes.csv" # NOVO ARQUIVO DE HISTÓRICO
+arquivo_historico = "historico_proposicoes.csv" # ARQUIVO DE HISTÓRICO
 
 # --- FUNÇÕES DE BANCO DE DADOS E SALVAMENTO ---
 
@@ -139,14 +139,14 @@ def gerar_documento_ia(autor, tipo_doc, assunto):
     else:
         regras_especificas = """
         ESTRUTURA DE TEXTO CORRIDO (Para Indicações/Pedidos):
-        1. Inicie com: 'O Vereador que este subscreve, no uso de suas atribuições legais...'
+        1. Inicie com: 'O Vereador que este subscreve, no uso de suas atribuições legais e regimentais...'
         2. Texto corrido, sem artigos.
         3. Seja direto na solicitação.
         """
 
     prompt = f"""
     Atue como um Procurador Jurídico Sênior da Câmara Municipal de Espumoso/RS.
-    Redija uma minuta de {tipo_doc} com alto rigor técnico.
+    Redija uma minuta de {tipo_doc} com alto rigor técnico e seja formal.
     
     AUTOR: {autor}.
     ASSUNTO: {assunto}.
@@ -163,7 +163,7 @@ def gerar_documento_ia(autor, tipo_doc, assunto):
        {regras_especificas}
     
     5. JUSTIFICATIVA (SOMENTE DEPOIS DO TEXTO DA LEI):
-       Título: "JUSTIFICATIVA"
+       Título: "JUSTIFICATIVA" (em negrito)
        Escreva um texto dissertativo-argumentativo formal defendendo a proposta.
        Foque na relevância social, jurídica e no interesse público.
     
@@ -171,9 +171,8 @@ def gerar_documento_ia(autor, tipo_doc, assunto):
        "Plenário Agostinho Somavilla, {datetime.now().strftime('%d de %B de %Y').replace('January', 'Janeiro').replace('February', 'Fevereiro').replace('March', 'Março').replace('April', 'Abril').replace('May', 'Maio').replace('June', 'Junho').replace('July', 'Julho').replace('August', 'Agosto').replace('September', 'Setembro').replace('October', 'Outubro').replace('November', 'Novembro').replace('December', 'Dezembro')}."
        (Espaço para assinatura)
        {autor}
-       Vereador(a)
        
-    IMPORTANTE: Adicione um mínimo de TRÊS LINHAS EM BRANCO entre cada seção principal para garantir a leitura clara em dispositivos móveis. Não use markdown de negrito (**).
+    IMPORTANTE: Adicione um mínimo de Duas LINHAS EM BRANCO entre cada seção principal para garantir a leitura clara em dispositivos móveis. Não use markdown de negrito (**).
     """
     
     try:
@@ -218,7 +217,7 @@ st.sidebar.markdown(f"""
 st.sidebar.markdown("---")
 st.sidebar.caption("Desenvolvido por:")
 st.sidebar.markdown("[**Daniel de Oliveira Colvero**](mailto:daniel.colvero@gmail.com)")
-st.sidebar.caption("© 2025 Câmara de Espumoso")
+st.sidebar.caption("©2025 Câmara de Espumoso")
 
 # --- TELA: INÍCIO ---
 if modo == "🏠 Início":
@@ -252,7 +251,7 @@ if modo == "🏠 Início":
     with col_c:
         with st.container(border=True):
             st.markdown("## 🏛️")
-            st.markdown("#### Mural de Notícias")
+            st.markdown("#### Mural de Atividades")
             st.caption("Acompanhe as atividades e postagens dos vereadores da Câmara.")
             st.button("Visitar Gabinete Virtual 👤", use_container_width=True, on_click=ir_para_gabinete)
 
@@ -346,8 +345,8 @@ elif modo == "💡 Banco de Ideias":
         st.subheader("2. Sua Ideia")
         ideia_desc = st.text_area("Descreva sua sugestão:", height=150, help='Dica: Não se preocupe em escrever bonito.')
         contribuicao = st.text_area("Como isso ajuda a comunidade?", height=100)
-        localizacao = st.text_input("Localização:")
-        areas = st.multiselect("Áreas:", ["Saúde", "Educação", "Obras", "Lazer", "Segurança", "Trânsito", "Outros"])
+        localizacao = st.text_input("Localização:", help='Dica: Bairro, Rua, Próximo a qual local, Número...')
+        areas = st.multiselect("Áreas:", ["Saúde", "Educação & Cultura", "Obras", "Lazer", "Segurança", "Trânsito", "Empregabilidade", "Tecnologia", "Outros"])
 
         st.markdown("---")
         st.subheader("3. Destino")
@@ -382,12 +381,12 @@ elif modo == "💡 Banco de Ideias":
     # --- Se NÃO estiver logado, mostra o FORMULÁRIO DE LOGIN ---
     if not st.session_state["admin_logado"]:
         with st.form("admin_login_form"):
-            # Usando type="password" para mascarar, mas a senha é numérica: 12345
+            # Usando type="password" para mascarar, mas a senha é numérica: 123321
             senha = st.text_input("Senha ADM (Somente números):", type="password") 
             enviou = st.form_submit_button("Acessar")
 
         if enviou:
-            if senha == "12345":
+            if senha == "123321":
                 st.session_state["admin_logado"] = True
                 st.rerun()
             else:
@@ -437,7 +436,7 @@ elif modo == "🔐 Área do Vereador":
                 st.session_state["vereador_logado"] = vereador_identificado 
                 st.rerun()
             else:
-                st.error("Falha na autenticação. Verifique a senha e se o nome foi selecionado.")
+                st.error("Falha na autenticação. Verifique a senha e se o seu nome foi selecionado.")
 
     # --- ÁREA LOGADA (Acesso Liberado com identidade travada) ---
     else:
@@ -458,7 +457,7 @@ elif modo == "🔐 Área do Vereador":
             
             # --- ÁREA DE CRIAÇÃO ---
             autor_selecionado = st.selectbox("Autor da Proposição:", [autor_sessao], disabled=True)
-            tipo_doc = st.selectbox("Tipo:", ["Pedido de Providência", "Pedido de Informação", "Indicação", "Projeto de Lei", "Moção de Aplauso", "Moção de Pesar"])
+            tipo_doc = st.selectbox("Tipo:", ["Pedido de Providência", "Pedido de Informação", "Indicação", "Projeto de Lei", "Moção"])
             
             if tipo_doc == "Projeto de Lei":
                 st.warning("⚠️ Atenção: A IA evitará Vício de Iniciativa criando leis 'Autorizativas' quando necessário.")
@@ -493,7 +492,7 @@ elif modo == "🔐 Área do Vereador":
             if 'minuta_pronta' in st.session_state:
                 
                 # --- 1. AVISO LEGAL CRÍTICO ---
-                st.error("🚨 AVISO LEGAL: Este texto é uma sugestão preliminar gerada por Inteligência Artificial (IA). Não possui validade jurídica. A responsabilidade pela análise, correção, adequação formal e constitucionalidade final é integralmente do Vereador(a) autor e de sua assessoria.")
+                st.error("🚨 AVISO LEGAL: Este texto é uma sugestão preliminar gerada por Inteligência Artificial (IA) e pode conter erros. Não possui validade jurídica. A responsabilidade pela análise, correção, adequação formal e constitucionalidade final é integralmente do Vereador(a) autor e de sua assessoria.")
                 
                 # 2. MINUTA ATUAL
                 st.subheader("Minuta Gerada:")
@@ -505,7 +504,7 @@ elif modo == "🔐 Área do Vereador":
                 st.text_area("Texto Final da Minuta:", value=minuta_para_copia, height=500, label_visibility="collapsed")
                 
                 # 3. INSTRUÇÃO E BOTÕES DE AÇÃO
-                st.info("💡 Para copiar o texto integral, selecione todo o conteúdo no campo acima (Ctrl+A no PC / Pressione e segure no celular).")
+                st.info("💡  Para copiar o texto pelo celular: Toque Longo dentro do campo - Selecionar tudo - Copiar. Depois use o botão Softcam para ir ao sistema e colar seu texto.")
                 
                 st.markdown("---")
 
