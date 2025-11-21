@@ -314,14 +314,16 @@ elif modo == "🔐 Área do Vereador":
                 col_copy, col_softcam = st.columns([1, 1])
                 
                 with col_copy:
-                    # O BOTÃO FINAL DE DOWNLOAD/COPIA SIMULADA (O mais robusto)
+                    # O BOTÃO GRANDE E FINAL DE TRANSFERÊNCIA (Baixa, mas resolve a cópia no celular)
                     st.download_button(
                         label="📋 COPIAR TEXTO", 
                         data=minuta_para_copia.encode('utf-8'),
                         file_name="Minuta_Legislativa.txt",
                         mime="text/plain",
-                        use_container_width=True
+                        use_container_width=True,
+                        type="primary" # Torna o botão azul grande
                     )
+                    st.caption("No celular, esta é a forma mais rápida de transferir o texto integral.")
                 
                 with col_softcam:
                     # Botão para o Softcam
