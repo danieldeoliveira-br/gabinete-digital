@@ -375,8 +375,25 @@ elif modo == "🔐 Área do Vereador":
 elif modo == "💡 Banco de Ideias":
     def voltar_inicio(): st.session_state.navegacao = "🏠 Início"
     st.button("⬅️ Voltar", on_click=voltar_inicio)
-    st.title("Banco de Ideias"); st.info("Envie sua sugestão.")
+    st.title("Banco de Ideias - Espumoso/RS"); 
+    st.info("""
+    **Bem-vindo(a) ao Banco de Ideias da Câmara de Espumoso!**
+    Este é o seu canal direto para enviar PROPOSTAS e SUGESTÕES CONSTRUTIVAS focadas em melhorar a nossa cidade.
+    """)
     
+    with st.expander("ℹ️ PARA QUE SERVE ESTE FORMULÁRIO (Clique para ler as instruções)"):
+        st.markdown("""
+        Use este espaço para enviar **IDEIAS de competência MUNICIPAL**, tais como:
+        * **Sugestões** para novos Projetos de Lei municipais.
+        * **Indicações** (Ex: "Pedir a instalação de um quebra-molas na frente da escola Y" ou "Pedir mais horários de ônibus para a localidade Z").
+        * **Pedidos de Providência** (Ex: "Solicitar o conserto do buraco na Rua X").
+        
+        **IMPORTANTE: FOCO EM ESPUMOSO**
+        Este formulário **NÃO é o canal** para manifestações gerais sobre política, nem para Reclamações ou Denúncias (para estes, use o canal de Ouvidoria).
+        
+        Se você tem uma **IDEIA** ou **SUGESTÃO** para Espumoso, você está no lugar certo!
+        """)
+        
     if 'sucesso_ideia' not in st.session_state: st.session_state['sucesso_ideia'] = False
     if st.session_state['sucesso_ideia']:
         st.success("✅ Enviado com sucesso!"); st.session_state['sucesso_ideia'] = False
