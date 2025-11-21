@@ -110,24 +110,41 @@ def gerar_documento_ia(autor, tipo_doc, assunto):
     
     regras = ""
     if tipo_doc == "Projeto de Lei":
-        regras = "Divida em ARTIGOS numerados. Use 'Fica o Poder Executivo AUTORIZADO...' para evitar vício de iniciativa em despesas. Inclua cláusula de vigência."
+        regras = """
+        TÉCNICA LEGISLATIVA (OBRIGATÓRIO):
+        1. O texto da lei deve vir IMEDIATAMENTE após a Ementa.
+        2. Use Artigos (Art. 1º, Art. 2º...), Parágrafos (§ 1º) e Incisos (I, II).
+        3. Linguagem: Formal, Impessoal e Imperativa.
+        4. VÍCIO DE INICIATIVA: Se o assunto gerar despesa ou envolver gestão interna da prefeitura, use 'Fica o Poder Executivo AUTORIZADO a instituir...'.
+        5. CLÁUSULAS PADRÃO:
+           - Penúltimo Artigo: 'O Poder Executivo regulamentará a presente Lei no que couber.'
+           - Último Artigo: 'Esta Lei entra em vigor na data de sua publicação.'
+        """
     else:
-        regras = "Texto corrido, sem artigos. Seja direto e formal."
+        regras = """
+        ESTRUTURA DE TEXTO CORRIDO (Para Indicações/Pedidos):
+        1. Inicie com: 'O Vereador que este subscreve, no uso de suas atribuições legais e regimentais...'
+        2. Texto corrido, sem artigos.
+        3. Seja direto na solicitação.
+        """
+
 
     prompt = f"""
-    Atue como um Procurador Jurídico Sênior da Câmara de Espumoso/RS.
-    Redija minuta de {tipo_doc}.
-    AUTOR: {autor}. ASSUNTO: {assunto}.
+    Atue como um Procurador Jurídico Sênior da Câmara Municipal de Espumoso/RS.
+    Redija minuta de {tipo_doc} com alto rigor técnico e seja formal.
+    AUTOR: {autor}. 
+    ASSUNTO: {assunto}.
     
     ESTRUTURA OBRIGATÓRIA:
     1. CABEÇALHO: "EXCELENTÍSSIMO SENHOR PRESIDENTE..."
-    2. PREÂMBULO: "{autor}, integrante da Bancada [Partido], submete..."
+    2. PREÂMBULO: "{autor}, integrante da Bancada [Extrair Partido], no uso de suas atribuições legais e regimentais, submete à apreciação do Plenário o seguinte {tipo_doc.upper()}:"
     3. EMENTA: (Caixa alta, resumo. Revise a ortografia).
-    4. TEXTO: {regras}
-    5. JUSTIFICATIVA: Título 'JUSTIFICATIVA' (em negrito). Texto dissertativo.
+    4. TEXTO (AQUI ENTRAM OS ARTIGOS OU O PEDIDO): {regras}
+    5. JUSTIFICATIVA (SOMENTE DEPOIS DO TEXTO DA LEI): 
+    Título 'JUSTIFICATIVA' (em negrito). Escreva um texto dissertativo-argumentativo formal defendendo a proposta. Foque na relevância social, jurídica e no interesse público
     6. FECHAMENTO: "Plenário Agostinho Somavilla, [Data]." Assinatura.
     
-    IMPORTANTE: Adicione TRÊS LINHAS EM BRANCO entre seções para leitura no celular.
+    IMPORTANTE: Adicione DUAS LINHAS EM BRANCO entre seções para leitura no celular.
     PROIBIDO: Não gere NENHUMA tag HTML, CSS ou formatação de código. Apenas texto puro.
     """
     try:
@@ -353,23 +370,33 @@ elif modo == "🔐 Área do Vereador":
             
             st.divider()
             st.subheader("🗑️ Editar/Excluir")
+            
             if os.path.exists(arquivo_mural):
                 df_full = pd.read_csv(arquivo_mural)
+                
+                # Filtro: Se for Jurídico vê tudo, se não, vê só o seu
                 if autor_sessao in LISTA_JURIDICO:
                      df_filter = df_full
                 else:
                      df_filter = df_full[df_full["Vereador"] == autor_sessao]
                 
+                # CORREÇÃO: Capturamos o resultado da edição na variável 'df_edit'
                 df_edit = st.data_editor(df_filter, num_rows="dynamic", key="editor_mural_key", use_container_width=True)
                 
                 if st.button("💾 Salvar Alterações Mural"):
-                    df_final = st.session_state["editor_mural_key"]
+                    # CORREÇÃO: Usamos 'df_edit' (a tabela pronta) para salvar
                     if autor_sessao in LISTA_JURIDICO:
-                        df_final.to_csv(arquivo_mural, index=False)
+                        df_edit.to_csv(arquivo_mural, index=False)
                     else:
+                        # Pega os posts dos outros (que não mexemos)
                         df_others = df_full[df_full["Vereador"] != autor_sessao]
-                        pd.concat([df_others, df_final]).to_csv(arquivo_mural, index=False)
-                    st.success("Salvo!"); st.rerun()
+                        # Junta com os nossos editados
+                        pd.concat([df_others, df_edit]).to_csv(arquivo_mural, index=False)
+                    
+                    st.success("Salvo com sucesso!")
+                    st.rerun()
+            else:
+                st.info("Mural vazio.")
 
 # --- TELA: BANCO DE IDEIAS ---
 elif modo == "💡 Banco de Ideias":
@@ -393,7 +420,7 @@ elif modo == "💡 Banco de Ideias":
         
         Se você tem uma **IDEIA** ou **SUGESTÃO** para Espumoso, você está no lugar certo!
         """)
-        
+
     if 'sucesso_ideia' not in st.session_state: st.session_state['sucesso_ideia'] = False
     if st.session_state['sucesso_ideia']:
         st.success("✅ Enviado com sucesso!"); st.session_state['sucesso_ideia'] = False
