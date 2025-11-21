@@ -3,6 +3,7 @@ import pandas as pd
 import os
 from datetime import datetime
 from groq import Groq
+from st_copy_to_clipboard import st_copy_to_clipboard
 
 # --- CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(page_title="Legislativo Digital", page_icon="🏛️", layout="wide")
@@ -328,27 +329,29 @@ elif modo == "🔐 Área do Vereador":
             if tipo_doc == "Projeto de Lei":
                 st.warning("⚠️ Atenção: A IA evitará Vício de Iniciativa criando leis 'Autorizativas' quando necessário.")
             
-            texto_input = st.text_area("Detalhamento:", height=150)
+            texto_input = st.text_area("Detalhamento da solicitação:", height=150)
             
             if st.button("📝 Elaborar Proposição"):
                 if texto_input:
                     with st.spinner('Redigindo documento com rigor técnico...'):
                         texto_final = gerar_documento_ia(autor_selecionado, tipo_doc, texto_input)
                         st.session_state['minuta_pronta'] = texto_final
-            
-            # --- SAÍDA (Aparece somente se houver texto gerado) ---
+
+            # 2. SAÍDA (Aparece somente se houver texto gerado)
             if 'minuta_pronta' in st.session_state:
                 st.subheader("Minuta Gerada:")
                 
-                # Exibe o texto em st.code para o botão de cópia funcionar no celular
-                st.code(st.session_state['minuta_pronta'], language="markdown")
+                minuta_para_copia = st.session_state['minuta_pronta']
                 
-                # Botões de Ação Final
+                # Exibe a minuta na caixa de texto
+                st.text_area("Texto Final da Minuta:", value=minuta_para_copia, height=500, label_visibility="collapsed")
+                
+                # --- BOTÕES DE AÇÃO FINAL ---
                 col_copy, col_softcam = st.columns([1, 1])
                 
                 with col_copy:
-                    # Instrução de cópia mais clara
-                    st.info("💡 Clique no ícone de cópia (acima) para transferir o texto.")
+                    # O NOVO BOTÃO GRANDE DE COPIA
+                    st_copy_to_clipboard(minuta_para_copia, label="📋 COPIAR TEXTO", type="primary", success_message="Texto copiado para a área de transferência!")
                 
                 with col_softcam:
                     # Botão para o Softcam
