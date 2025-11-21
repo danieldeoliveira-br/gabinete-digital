@@ -5,6 +5,7 @@ from datetime import datetime
 from groq import Groq
 
 # --- CONFIGURAÇÃO DA PÁGINA ---
+# Nota: O tema escuro é configurado no arquivo .streamlit/config.toml
 st.set_page_config(page_title="Legislativo Digital", page_icon="🏛️", layout="wide")
 
 # --- CONFIGURAÇÃO DA IA ---
@@ -21,7 +22,7 @@ LISTA_VEREADORES = [
     "Vereadora Fabiana Dolci Otoni (PROGRESSISTAS)",
     "Vereadora Ivone Maria Capitanio Missio (PROGRESSISTAS)",
     "Vereador Leandro Keller Colleraus (PDT)",
-    "Vereador Marina Camera Machado (PL)",
+    "Vereadora Marina Camera Machado (PL)",
     "Vereador Paulo Flores de Moraes (PDT)",
     "Vereador Tomas Fiuza (PROGRESSISTAS)"
 ]
@@ -33,6 +34,7 @@ def gerar_documento_ia(autor, tipo_doc, assunto):
     
     client = Groq(api_key=api_key)
     
+    # Regras específicas para evitar Vício de Iniciativa
     if tipo_doc == "Projeto de Lei":
         regras_especificas = """
         TÉCNICA LEGISLATIVA (OBRIGATÓRIO):
@@ -172,16 +174,25 @@ if modo == "🏠 Início":
     col_a, col_b, col_c = st.columns(3)
     
     with col_a:
-        st.info("🤖 Para Vereadores")
-        st.button("Criar Lei / Documentos 📝", use_container_width=True, on_click=ir_para_assistente)
+        with st.container(border=True): 
+            st.markdown("## 🔐")
+            st.markdown("#### Área do Vereador")
+            st.caption("Acesso às ferramentas de inteligência artificial (para elaboração de documentos) e gestão do Mural de Atividades.")
+            st.button("Acessar Área Restrita 📝", use_container_width=True, on_click=ir_para_assistente)
             
     with col_b:
-        st.success("💡 Para a Comunidade")
-        st.button("Enviar Ideia / Sugestão 🚀", use_container_width=True, on_click=ir_para_ideias)
+        with st.container(border=True):
+            st.markdown("## 💡")
+            st.markdown("#### Banco de Ideias")
+            st.caption("Canal direto para sugestões e propostas da comunidade.")
+            st.button("Enviar Ideia / Sugestão 🚀", use_container_width=True, on_click=ir_para_ideias)
 
     with col_c:
-        st.warning("🏛️ Gabinetes")
-        st.button("Visitar Gabinete Virtual 👤", use_container_width=True, on_click=ir_para_gabinete)
+        with st.container(border=True):
+            st.markdown("## 🏛️")
+            st.markdown("#### Mural de Notícias")
+            st.caption("Acompanhe as atividades e postagens dos vereadores da Câmara.")
+            st.button("Visitar Mural 👤", use_container_width=True, on_click=ir_para_gabinete)
 
     st.divider()
 
@@ -207,7 +218,6 @@ elif modo == "👤 Gabinete Virtual":
                 
                 for index, row in ultimas_postagens.iterrows():
                     with st.container(border=True):
-                        # Define avatar para o feed geral
                         avatar_feed = obter_avatar_simples(row['Vereador'])
 
                         col_avatar, col_texto = st.columns([1, 6])
@@ -226,13 +236,12 @@ elif modo == "👤 Gabinete Virtual":
 
     # --- MODO 2: PERFIL INDIVIDUAL ---
     else:
-        avatar_perfil = obter_avatar_simples(vereador_selecionado) # Usa a função para o perfil individual
+        avatar_perfil = obter_avatar_simples(vereador_selecionado)
 
         st.divider()
         col_foto, col_info = st.columns([1, 3])
         
         with col_foto:
-            # Usa o avatar definido acima no tamanho grande, sem customização complexa
             st.markdown(f"<div style='font-size: 100px; text-align: center;'>{avatar_perfil}</div>", unsafe_allow_html=True)
         
         with col_info:
@@ -314,16 +323,15 @@ elif modo == "🔐 Área do Vereador":
                 col_copy, col_softcam = st.columns([1, 1])
                 
                 with col_copy:
-                    # O BOTÃO GRANDE E FINAL DE TRANSFERÊNCIA (Baixa, mas resolve a cópia no celular)
+                    # O BOTÃO FINAL DE COPIA/DOWNLOAD (Versão mais robusta para celular)
                     st.download_button(
                         label="📋 COPIAR TEXTO", 
                         data=minuta_para_copia.encode('utf-8'),
                         file_name="Minuta_Legislativa.txt",
                         mime="text/plain",
                         use_container_width=True,
-                        type="primary" # Torna o botão azul grande
+                        type="primary"
                     )
-                    st.caption("No celular, esta é a forma mais rápida de transferir o texto integral.")
                 
                 with col_softcam:
                     # Botão para o Softcam
