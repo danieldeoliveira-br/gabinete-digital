@@ -509,18 +509,22 @@ elif modo == "🔐 Área do Vereador":
         st.header("🔒 Acesso Restrito - Identificação")
         st.warning("Selecione seu nome e insira a senha de acesso da assessoria.")
 
+        # Este é o campo de seleção de identidade que estava com problema
         vereador_identificado = st.selectbox("Eu sou:", ["Selecione seu nome..."] + LISTA_VEREADORES)
         senha_digitada = st.text_input("Digite a senha de acesso:", type="password")
 
         if st.button("Entrar"):
-            if vereador_identificado != "Selecione seu nome..." and senha_digitada == "1955":
+            # Verifica se o vereador foi selecionado e a senha está correta
+            if vereador_identificado != "Selecione seu nome..." and senha_digitada == "camara2025":
                 st.session_state["acesso_vereador"] = True
                 st.session_state["vereador_logado"] = vereador_identificado 
                 st.rerun()
             else:
-                st.error("Falha na autenticação. Verifique a senha e se o seu nome foi selecionado.")
+                st.error("Falha na autenticação. Verifique a senha e se o nome foi selecionado.")
 
     # --- ÁREA LOGADA (Acesso Liberado com identidade travada) ---
+    else:
+        # [O código da área logada continua aqui, sem ser afetado]
     else:
         autor_sessao = st.session_state["vereador_logado"]
 
@@ -602,7 +606,7 @@ elif modo == "🔐 Área do Vereador":
                 type="primary", 
                 use_container_width=True
             )    
-            
+
                 # 3. INSTRUÇÃO E BOTÕES DE AÇÃO
                 st.info("💡  Para copiar o texto pelo celular: Toque Longo dentro do campo - Selecionar tudo - Copiar. Depois use o botão Softcam para ir ao sistema e colar seu texto.")
                 
