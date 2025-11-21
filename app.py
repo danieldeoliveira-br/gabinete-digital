@@ -173,6 +173,7 @@ def gerar_documento_ia(autor, tipo_doc, assunto):
        {autor}
        
     IMPORTANTE: Adicione um mínimo de Duas LINHAS EM BRANCO entre cada seção principal para garantir a leitura clara em dispositivos móveis. Não use markdown de negrito (**).
+    **PROIBIDO:** Não gere NENHUMA tag HTML, CSS, ou formatação de código (como `<font>`, `<div>`, etc.). Gere apenas texto puro.
     """
     
     try:
