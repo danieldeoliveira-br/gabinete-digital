@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
 import os
+import streamlit.components.v1 as components
+import json
 from datetime import datetime
 from groq import Groq
 
@@ -30,7 +32,7 @@ LISTA_JURIDICO = [
     "Assessoria Jurídica"
 ]
 
-# Lista unificada para o Login (Jurídico entra aqui como se fosse vereador)
+# Lista unificada para o Login
 LISTA_LOGIN = LISTA_VEREADORES + LISTA_JURIDICO
 
 # --- ARQUIVOS DE DADOS ---
@@ -47,6 +49,7 @@ def obter_avatar_simples(nome):
         return "👨"
 
 def salvar_historico(autor, tipo, assunto, texto_minuta, versao_id, revisao_num):
+    """Salva a versão atual da minuta no histórico em CSV."""
     if not os.path.exists(arquivo_historico):
         df = pd.DataFrame(columns=["ID_PROPOSICAO", "VEREADOR", "TIPO_DOC", "ASSUNTO", "VERSAO_NUM", "DATA_HORA", "MINUTA_TEXTO"])
     else:
@@ -65,6 +68,7 @@ def salvar_historico(autor, tipo, assunto, texto_minuta, versao_id, revisao_num)
     df.to_csv(arquivo_historico, index=False)
 
 def salvar_ideia(dados):
+    """Salva uma nova ideia no Banco de Ideias."""
     if not os.path.exists(arquivo_ideias):
         df = pd.DataFrame(columns=["Data", "Nome", "Contato", "Ideia", "Contribuição", "Localização", "Áreas", "Idade", "Vereador Destino", "Concordou Termos"])
     else:
@@ -74,6 +78,7 @@ def salvar_ideia(dados):
     df.to_csv(arquivo_ideias, index=False)
 
 def salvar_post_mural(dados):
+    """Salva uma nova postagem no Mural de Notícias."""
     if not os.path.exists(arquivo_mural):
         df = pd.DataFrame(columns=["Data", "Vereador", "Titulo", "Mensagem"])
     else:
@@ -82,20 +87,20 @@ def salvar_post_mural(dados):
     df = pd.concat([df, nova_linha], ignore_index=True)
     df.to_csv(arquivo_mural, index=False)
 
-# --- FUNÇÕES IA ---
+# --- FUNÇÕES IA (RESTAURADAS COM A SUA LÓGICA COMPLETA) ---
+
 def gerar_revisao_ia(texto_base, pedido_revisao, autor, tipo_doc):
     if not api_key: return "⚠️ ERRO: Chave API não encontrada!"
     client = Groq(api_key=api_key)
     prompt = f"""
-    Você é um Procurador Jurídico Sênior. REVISE a minuta abaixo.
+    Você é um Procurador Jurídico Sênior com foco em revisão textual.
     Vereador: {autor} | Tipo: {tipo_doc} | Pedido: {pedido_revisao}
     ---
     TEXTO ATUAL:
     {texto_base}
     ---
     Gere a NOVA VERSÃO mantendo a estrutura formal. Correção gramatical impecável.
-    Adicione TRÊS LINHAS EM BRANCO entre seções para leitura.
-    PROIBIDO USAR HTML.
+    Adicione TRÊS LINHAS EM BRANCO entre seções. PROIBIDO HTML.
     """
     try:
         chat = client.chat.completions.create(messages=[{"role": "user", "content": prompt}], model="llama-3.3-70b-versatile", temperature=0.3)
@@ -103,35 +108,73 @@ def gerar_revisao_ia(texto_base, pedido_revisao, autor, tipo_doc):
     except Exception as e: return f"Erro IA: {e}"
 
 def gerar_documento_ia(autor, tipo_doc, assunto):
-    if not api_key: return "⚠️ ERRO: Chave API não encontrada!"
+    """Gera a primeira minuta do documento com base nas regras de técnica legislativa."""
+    if not api_key:
+        return "⚠️ ERRO: A chave da API não foi encontrada nos Secrets!"
+    
     client = Groq(api_key=api_key)
     
-    regras = ""
     if tipo_doc == "Projeto de Lei":
-        regras = "Divida em ARTIGOS numerados. Use 'Fica o Poder Executivo AUTORIZADO...' para evitar vício de iniciativa em despesas. Inclua cláusula de vigência."
+        regras_especificas = """
+        TÉCNICA LEGISLATIVA (OBRIGATÓRIO):
+        1. O texto da lei deve vir IMEDIATAMENTE após a Ementa.
+        2. Use Artigos (Art. 1º, Art. 2º...), Parágrafos (§ 1º) e Incisos (I, II).
+        3. Linguagem: Formal, Impessoal e Imperativa.
+        4. VÍCIO DE INICIATIVA: Se o assunto gerar despesa ou envolver gestão interna da prefeitura, use 'Fica o Poder Executivo AUTORIZADO a instituir...'.
+        5. CLÁUSULAS PADRÃO:
+           - Penúltimo Artigo: 'O Poder Executivo regulamentará a presente Lei no que couber.'
+           - Último Artigo: 'Esta Lei entra em vigor na data de sua publicação.'
+        """
     else:
-        regras = "Texto corrido, sem artigos. Seja direto e formal."
+        regras_especificas = """
+        ESTRUTURA DE TEXTO CORRIDO (Para Indicações/Pedidos):
+        1. Inicie com: 'O Vereador que este subscreve, no uso de suas atribuições legais e regimentais...'
+        2. Texto corrido, sem artigos.
+        3. Seja direto na solicitação.
+        """
 
     prompt = f"""
-    Atue como um Procurador Jurídico Sênior da Câmara de Espumoso/RS.
-    Redija minuta de {tipo_doc}.
-    AUTOR: {autor}. ASSUNTO: {assunto}.
+    Atue como um Procurador Jurídico Sênior da Câmara Municipal de Espumoso/RS.
+    Redija uma minuta de {tipo_doc} com alto rigor técnico e seja formal.
     
-    ESTRUTURA OBRIGATÓRIA:
-    1. CABEÇALHO: "EXCELENTÍSSIMO SENHOR PRESIDENTE..."
-    2. PREÂMBULO: "{autor}, integrante da Bancada [Partido], submete..."
-    3. EMENTA: (Caixa alta, resumo. Revise a ortografia).
-    4. TEXTO: {regras}
-    5. JUSTIFICATIVA: Título 'JUSTIFICATIVA' (em negrito). Texto dissertativo.
-    6. FECHAMENTO: "Plenário Agostinho Somavilla, [Data]." Assinatura.
+    AUTOR: {autor}.
+    ASSUNTO: {assunto}.
     
-    IMPORTANTE: Adicione TRÊS LINHAS EM BRANCO entre seções para leitura no celular.
-    PROIBIDO: Não gere NENHUMA tag HTML, CSS ou formatação de código. Apenas texto puro.
+    ORDEM OBRIGATÓRIA DO DOCUMENTO (NÃO INVERTA):
+    
+    1. CABEÇALHO: "EXCELENTÍSSIMO SENHOR PRESIDENTE DA CÂMARA MUNICIPAL DE ESPUMOSO – RS"
+    
+    2. PREÂMBULO: "{autor}, integrante da Bancada [Extrair Partido], no uso de suas atribuições legais e regimentais, submete à apreciação do Plenário o seguinte {tipo_doc.upper()}:"
+    
+    3. EMENTA: (Resumo do assunto em caixa alta, negrito e centralizado).
+    
+    4. TEXTO DA PROPOSIÇÃO (AQUI ENTRAM OS ARTIGOS OU O PEDIDO):
+       {regras_especificas}
+    
+    5. JUSTIFICATIVA (SOMENTE DEPOIS DO TEXTO DA LEI):
+       Título: "JUSTIFICATIVA" (em negrito)
+       Escreva um texto dissertativo-argumentativo formal defendendo a proposta.
+       Foque na relevância social, jurídica e no interesse público.
+    
+    6. FECHAMENTO:
+       "Plenário Agostinho Somavilla, {datetime.now().strftime('%d de %B de %Y').replace('January', 'Janeiro').replace('February', 'Fevereiro').replace('March', 'Março').replace('April', 'Abril').replace('May', 'Maio').replace('June', 'Junho').replace('July', 'Julho').replace('August', 'Agosto').replace('September', 'Setembro').replace('October', 'Outubro').replace('November', 'Novembro').replace('December', 'Dezembro')}."
+       (Espaço para assinatura)
+       {autor}
+       
+    IMPORTANTE: Adicione um mínimo de Duas LINHAS EM BRANCO entre cada seção principal para garantir a leitura clara em dispositivos móveis. Não use markdown de negrito (**).
+    **PROIBIDO:** Não gere NENHUMA tag HTML, CSS, ou formatação de código (como `<font>`, `<div>`, etc.). Gere apenas texto puro.
     """
+    
     try:
-        chat = client.chat.completions.create(messages=[{"role": "user", "content": prompt}], model="llama-3.3-70b-versatile", temperature=0.2)
-        return chat.choices[0].message.content
-    except Exception as e: return f"Erro IA: {e}"
+        chat_completion = client.chat.completions.create(
+            messages=[{"role": "user", "content": prompt}],
+            model="llama-3.3-70b-versatile",
+            temperature=0.2
+        )
+        return chat_completion.choices[0].message.content
+    except Exception as e:
+        return f"Ops, deu erro na IA: {e}"
+
 
 # --- MENU LATERAL ---
 if os.path.exists("brasao.png"):
@@ -193,12 +236,29 @@ if modo == "🏠 Início":
 
     st.divider()
     st.markdown("### Acompanhe-nos nas Redes Sociais")
-    cf, ci, cy, cd, cs = st.columns(5)
-    with cf: st.markdown('<a href="https://facebook.com/camaraespumoso" style="text-decoration:none;color:#FAFAFA;">📘 Facebook</a>', unsafe_allow_html=True)
-    with ci: st.markdown('<a href="https://instagram.com/camaraespumoso" style="text-decoration:none;color:#FAFAFA;">📸 Instagram</a>', unsafe_allow_html=True)
-    with cy: st.markdown('<a href="https://youtube.com/camaraespumoso" style="text-decoration:none;color:#FAFAFA;">▶️ YouTube</a>', unsafe_allow_html=True)
-    with cd: st.markdown('<a href="https://discord.gg/a7dGZJUx" style="text-decoration:none;color:#FAFAFA;">💬 Discord</a>', unsafe_allow_html=True)
-    with cs: st.markdown('<a href="https://www.camaraespumoso.rs.gov.br" style="text-decoration:none;color:#FAFAFA;">🌐 Site Oficial</a>', unsafe_allow_html=True)
+    
+    # URLs para referência
+    url_fb = "https://facebook.com/camaraespumoso"
+    url_ig = "https://instagram.com/camaraespumoso"
+    url_yt = "https://youtube.com/camaraespumoso"
+    url_dc = "https://discord.gg/a7dGZJUx"
+    url_site = "https://www.camaraespumoso.rs.gov.br"
+
+    # Estilo sem sublinhado
+    estilo = "text-decoration: none; color: #FAFAFA;"
+
+    col_fb, col_ig, col_yt, col_dc, col_wa_site = st.columns(5)
+    
+    with col_fb:
+        st.markdown(f'<a href="{url_fb}" style="{estilo}">📘 Facebook</a>', unsafe_allow_html=True)
+    with col_ig:
+        st.markdown(f'<a href="{url_ig}" style="{estilo}">📸 Instagram</a>', unsafe_allow_html=True)
+    with col_yt:
+        st.markdown(f'<a href="{url_yt}" style="{estilo}">▶️ YouTube</a>', unsafe_allow_html=True)
+    with col_dc:
+        st.markdown(f'<a href="{url_dc}" style="{estilo}">💬 Discord</a>', unsafe_allow_html=True) 
+    with col_wa_site:
+        st.markdown(f'<a href="{url_site}" style="{estilo}">🌐 Site Oficial</a>', unsafe_allow_html=True) 
 
 # --- TELA: GABINETE VIRTUAL ---
 elif modo == "👤 Gabinete Virtual":
@@ -247,7 +307,7 @@ elif modo == "👤 Gabinete Virtual":
                         st.caption(f"🗓️ {row['Data']}")
                         st.markdown(f"### {row['Titulo']}")
                         st.write(row['Mensagem'])
-            else: st.info("Sem publicações.")
+            else: st.info("Sem publicações deste vereador.")
 
 # --- TELA: ÁREA DO VEREADOR (RESTRITA) ---
 elif modo == "🔐 Área do Vereador":
@@ -259,8 +319,12 @@ elif modo == "🔐 Área do Vereador":
 
     if not st.session_state["acesso_vereador"]:
         st.header("🔒 Acesso Restrito - Identificação")
+        st.warning("Selecione seu nome e insira a senha de acesso.")
+        
+        # Lista completa para login
         usuario_identificado = st.selectbox("Eu sou:", ["Selecione..."] + LISTA_LOGIN)
         senha_digitada = st.text_input("Senha:", type="password")
+        
         if st.button("Entrar"):
             if usuario_identificado != "Selecione..." and senha_digitada == "camara2025":
                 st.session_state["acesso_vereador"] = True
@@ -270,17 +334,19 @@ elif modo == "🔐 Área do Vereador":
     else:
         autor_sessao = st.session_state["vereador_logado"]
         if st.button("Sair", type="secondary"):
-            st.session_state["acesso_vereador"] = False; st.rerun()
+            st.session_state["acesso_vereador"] = False; st.session_state["vereador_logado"] = None; st.rerun()
 
         st.success(f"Logado como: **{autor_sessao}**")
         tab1, tab2 = st.tabs(["⚖️ Criar Documentos", "📢 Gerenciar Mural"])
         
+        # --- ABA 1: IA ---
         with tab1:
             st.header("Elaboração de Documentos")
-            # Campo travado com o nome do usuário logado
+            
+            # Campo travado
             autor_selecionado = st.selectbox("Autor:", [autor_sessao], disabled=True)
 
-            tipo_doc = st.selectbox("Tipo:", ["Pedido de Providência", "Pedido de Informação", "Indicação", "Projeto de Lei", "Moção"])
+            tipo_doc = st.selectbox("Tipo:", ["Pedido de Providência", "Pedido de Informação", "Indicação", "Projeto de Lei", "Moção de Aplauso", "Moção de Pesar"])
             if tipo_doc == "Projeto de Lei": st.warning("⚠️ Cuidado com Vício de Iniciativa.")
             texto_input = st.text_area("Detalhamento:", height=150)
             
@@ -300,15 +366,21 @@ elif modo == "🔐 Área do Vereador":
             if 'minuta_pronta' in st.session_state:
                 st.error("🚨 AVISO LEGAL: IA pode cometer erros. Revise antes de usar.")
                 st.subheader("Minuta Gerada:")
-                # USANDO TEXT AREA GRANDE PARA LEITURA
+                
+                # VISUALIZAÇÃO LIMPA
                 st.text_area("Texto Final:", value=st.session_state['minuta_pronta'], height=800)
-                st.info("💡 Selecione todo o texto e copie.")
+                
+                # CÓPIA COM ÍCONE NATIVO DO ST.CODE (A única que funciona 100%)
+                st.code(st.session_state['minuta_pronta'], language="markdown")
+                st.info("💡 Use o ícone de cópia acima.")
                 
                 st.link_button("🌐 Ir para Softcam", "https://www.camaraespumoso.rs.gov.br/softcam/", type="primary", use_container_width=True)
                 
                 st.markdown("---")
                 st.subheader("🔄 Revisão")
                 with st.form("revisao"):
+                    current_ver = st.session_state['prop_ver']
+                    st.write(f"Revisar V{current_ver}")
                     msg_rev = st.text_input("O que melhorar?")
                     if st.form_submit_button("🔁 Revisar"):
                         nova_minuta = gerar_revisao_ia(st.session_state['minuta_pronta'], msg_rev, autor_selecionado, st.session_state['tipo_atual'])
@@ -324,10 +396,11 @@ elif modo == "🔐 Área do Vereador":
                             df_h = pd.read_csv(arquivo_historico)
                             df_p = df_h[df_h["ID_PROPOSICAO"] == st.session_state['prop_id']].sort_values(by="VERSAO_NUM", ascending=False)
                             for i, r in df_p.iterrows():
-                                if st.button(f"Carregar V{r['VERSAO_NUM']}", key=r['VERSAO_NUM']):
+                                if st.button(f"Carregar V{r['VERSAO_NUM']}", key=f"hist_{r['VERSAO_NUM']}"):
                                     st.session_state['minuta_pronta'] = r['MINUTA_TEXTO']
                                     st.rerun()
 
+        # --- ABA 2: MURAL ---
         with tab2:
             st.header("📢 Gerenciar Mural")
             with st.form("post"):
@@ -340,7 +413,7 @@ elif modo == "🔐 Área do Vereador":
             
             st.divider()
             st.subheader("🗑️ Editar/Excluir")
-            # CORREÇÃO DA TABELA DE MURAL (Lógica que funciona)
+            
             if os.path.exists(arquivo_mural):
                 df_full = pd.read_csv(arquivo_mural)
                 # Se for Jurídico, vê tudo. Se for vereador, vê só o seu.
@@ -349,17 +422,19 @@ elif modo == "🔐 Área do Vereador":
                 else:
                      df_filter = df_full[df_full["Vereador"] == autor_sessao]
                 
-                # Editor
-                df_edit = st.data_editor(df_filter, num_rows="dynamic", key="editor_mural", use_container_width=True)
+                # Editor COM CHAVE DE ESTADO
+                df_edit = st.data_editor(df_filter, num_rows="dynamic", key="editor_mural_key", use_container_width=True)
                 
                 if st.button("💾 Salvar Alterações Mural"):
                     # Salva misturando com os dados dos outros que não foram tocados
+                    # Lê do estado para garantir
+                    df_final_editado = st.session_state["editor_mural_key"]
+                    
                     if "Jurídica" in autor_sessao:
-                        df_edit.to_csv(arquivo_mural, index=False)
+                        df_final_editado.to_csv(arquivo_mural, index=False)
                     else:
-                        # Pega tudo que NÃO é deste vereador e junta com o que ele editou
                         df_others = df_full[df_full["Vereador"] != autor_sessao]
-                        pd.concat([df_others, df_edit]).to_csv(arquivo_mural, index=False)
+                        pd.concat([df_others, df_final_editado]).to_csv(arquivo_mural, index=False)
                     st.success("Salvo!"); st.rerun()
 
 # --- TELA: BANCO DE IDEIAS ---
@@ -368,10 +443,6 @@ elif modo == "💡 Banco de Ideias":
     st.button("⬅️ Voltar", on_click=voltar_inicio)
     st.title("Banco de Ideias"); st.info("Envie sua sugestão.")
     
-    if 'sucesso_ideia' not in st.session_state: st.session_state['sucesso_ideia'] = False
-    if st.session_state['sucesso_ideia']:
-        st.success("✅ Enviado com sucesso!"); st.session_state['sucesso_ideia'] = False
-
     with st.form("ideia", clear_on_submit=False):
         nome = st.text_input("Nome:")
         contato = st.text_input("Contato:")
@@ -385,14 +456,14 @@ elif modo == "💡 Banco de Ideias":
         if st.form_submit_button("Enviar"):
             if termos and ideia and dest != "Escolha...":
                 salvar_ideia({"Data": datetime.now().strftime("%d/%m %H:%M"), "Nome": nome, "Contato": contato, "Idade": idade, "Ideia": ideia, "Localização": local, "Áreas": ", ".join(area), "Vereador Destino": dest, "Concordou Termos": "Sim"})
-                st.session_state['sucesso_ideia'] = True; st.rerun()
+                st.balloons()
+                st.success("✅ Enviado com sucesso! Limpe os campos para novo envio.")
             else: st.error("Preencha tudo.")
 
     st.divider()
     st.subheader("🔐 Área Administrativa")
     senha = st.text_input("Senha ADM (Números):", type="password")
     
-    # Lógica de Login Admin
     if "admin_logado" not in st.session_state: st.session_state["admin_logado"] = False
     
     if not st.session_state["admin_logado"]:
@@ -402,18 +473,21 @@ elif modo == "💡 Banco de Ideias":
     else:
         if st.button("Sair Admin"): st.session_state["admin_logado"] = False; st.rerun()
         
+        st.subheader("Gerenciar Ideias")
+        st.caption("Selecione linhas e aperte Delete para apagar.")
+        
         if os.path.exists(arquivo_ideias):
             df = pd.read_csv(arquivo_ideias)
             
-            # --- CORREÇÃO TABELA ADMIN (Igual ao Mural) ---
-            # Editor direto
-            df_editado = st.data_editor(df, num_rows="dynamic", key="editor_ideias", use_container_width=True)
+            # Editor Admin com CHAVE DE ESTADO
+            st.data_editor(df, num_rows="dynamic", key="editor_ideias_admin", use_container_width=True)
             
             c1, c2 = st.columns(2)
             with c1:
                 if st.button("💾 Salvar Tabela"):
-                    df_editado.to_csv(arquivo_ideias, index=False)
-                    st.success("Atualizado!"); st.rerun()
+                    # Salva direto do estado
+                    st.session_state["editor_ideias_admin"].to_csv(arquivo_ideias, index=False)
+                    st.success("Salvo!"); st.rerun()
             with c2:
                 st.download_button("📥 Baixar CSV", df.to_csv(index=False).encode('utf-8'), "ideias.csv", "text/csv")
         else: st.info("Sem dados.")
