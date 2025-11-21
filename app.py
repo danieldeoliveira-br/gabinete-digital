@@ -713,6 +713,11 @@ elif modo == "🔐 Área do Vereador":
 
 # --- TELA: BANCO DE IDEIAS (PÚBLICA) ---
 elif modo == "💡 Banco de Ideias":
+    
+    # --- NOVO: Inicializa a flag de sucesso ---
+    if 'sucesso_ideia' not in st.session_state:
+        st.session_state['sucesso_ideia'] = False
+
     def voltar_inicio():
         st.session_state.navegacao = "🏠 Início"
     st.button("⬅️ Voltar para o Início", on_click=voltar_inicio, key="voltar_ideias")
@@ -720,9 +725,15 @@ elif modo == "💡 Banco de Ideias":
     st.title("Banco de Ideias - Espumoso/RS")
     st.info("Bem-vindo(a)! Envie suas sugestões construtivas para a cidade.")
     
-    # IMPORTANTE: Removed st.session_state['ideia_enviada'] logic
+    # --- EXIBIÇÃO DA MENSAGEM (FORA DO FORMULÁRIO) ---
+    if st.session_state['sucesso_ideia']:
+        st.balloons()
+        st.success("✅ Sua ideia foi enviada com sucesso! Agradecemos sua participação.")
+        # Limpa a flag para não exibir a mensagem no próximo carregamento
+        st.session_state['sucesso_ideia'] = False
+    # ---------------------------------------------------
 
-    with st.form("form_ideia_completo"): # Removed clear_on_submit=True (it's the default anyway)
+    with st.form("form_ideia_completo", clear_on_submit=True): # clear_on_submit=True para limpar campos
         st.subheader("1. Sobre Você")
         nome = st.text_input("Seu nome completo:", help="Precisamos dos seus dados apenas para que o Vereador possa, se necessário, entrar em contato para entender melhor a sua ideia. Seus dados estarão protegidos.")
         contato = st.text_input("Seu número de celular:")
@@ -750,9 +761,9 @@ elif modo == "💡 Banco de Ideias":
                 }
                 salvar_ideia(dados)
                 
-                # A Confirmação Visual agora está aqui e persiste
-                st.balloons()
-                st.success("✅ Sua ideia foi enviada com sucesso! Navegue para outra aba ou recarregue a página para um novo envio.")
+                # ATIVA A FLAG E FORÇA O REINÍCIO PARA O FORMULÁRIO SER LIMPO
+                st.session_state['sucesso_ideia'] = True
+                st.rerun() 
                 
             else:
                 st.error("Preencha os campos obrigatórios e aceite os termos.")
