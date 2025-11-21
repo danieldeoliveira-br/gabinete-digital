@@ -747,9 +747,10 @@ elif modo == "💡 Banco de Ideias":
                     "Áreas": ", ".join(areas), "Vereador Destino": vereador, "Concordou Termos": "Sim"
                 }
                 salvar_ideia(dados)
-
+                
                 st.balloons()
-                st.success("Enviado com sucesso! Recarregue a página para um novo envio.")
+                st.success("Enviado com sucesso! Recarregue a página para um novo envio.") # Mensagem agora persistente
+                
             else:
                 st.error("Preencha os campos obrigatórios e aceite os termos.")
 
