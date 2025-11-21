@@ -26,7 +26,7 @@ LISTA_VEREADORES = [
     "Vereador Tomas Fiuza (PROGRESSISTAS)"
 ]
 
-# --- FUNÇÃO: REDATOR IA ---
+# --- FUNÇÃO: REDATOR IA (COM ESPAÇAMENTO FORÇADO) ---
 def gerar_documento_ia(autor, tipo_doc, assunto):
     if not api_key:
         return "⚠️ ERRO: A chave da API não foi encontrada nos Secrets!"
@@ -81,7 +81,7 @@ def gerar_documento_ia(autor, tipo_doc, assunto):
        {autor}
        Vereador(a)
        
-    IMPORTANTE: Não use markdown de negrito (**) no corpo dos artigos.
+    IMPORTANTE: Adicione um mínimo de TRÊS LINHAS EM BRANCO entre cada seção principal (CABEÇALHO, EMENTA, TEXTO, JUSTIFICATIVA, FECHAMENTO) para garantir a leitura clara em dispositivos móveis. Não use markdown de negrito (**).
     """
     
     try:
@@ -93,6 +93,7 @@ def gerar_documento_ia(autor, tipo_doc, assunto):
         return chat_completion.choices[0].message.content
     except Exception as e:
         return f"Ops, deu erro na IA: {e}"
+
 
 # --- FUNÇÕES DE BANCO DE DADOS ---
 arquivo_ideias = "banco_de_ideias.csv"
@@ -311,7 +312,6 @@ elif modo == "🔐 Área do Vereador":
         
         with aba_ia:
             st.header("Elaboração de Documentos")
-            # FIX: O selectbox usa APENAS o nome do vereador logado e é DESABILITADO
             autor_selecionado = st.selectbox("Autor da Proposição:", [autor_sessao], disabled=True)
             tipo_doc = st.selectbox("Tipo:", ["Pedido de Providência", "Pedido de Informação", "Indicação", "Projeto de Lei", "Moção de Aplauso", "Moção de Pesar"])
             
@@ -322,8 +322,8 @@ elif modo == "🔐 Área do Vereador":
             
             if st.button("📝 Elaborar Proposição"):
                 if texto_input:
-                    with st.spinner('Redigindo...'):
-                        texto_final = gerar_documento_ia(autor_sessao, tipo_doc, texto_input) # Usa o autor logado
+                    with st.spinner('Redigindo documento com rigor técnico...'):
+                        texto_final = gerar_documento_ia(autor_selecionado, tipo_doc, texto_input)
                         st.session_state['minuta_pronta'] = texto_final
             
             # 2. SAÍDA
@@ -331,8 +331,12 @@ elif modo == "🔐 Área do Vereador":
                 st.subheader("Minuta Gerada:")
                 
                 minuta_para_copia = st.session_state['minuta_pronta']
-                st.code(minuta_para_copia, language="markdown") # Botão de cópia discreto
+                st.code(minuta_para_copia, language="markdown") # A caixa de texto com o ícone de cópia
                 
+                # --- INSTRUÇÃO DE COPIA (AGORA APARECE BEM CLARO ABAIXO) ---
+                st.info("Clique no ícone de cópia (no canto superior direito do bloco de texto) para transferir a minuta integral.")
+                
+                # Botões de Ação Final
                 st.markdown("---")
                 st.link_button(
                     "🌐 Ir para o Softcam", 
