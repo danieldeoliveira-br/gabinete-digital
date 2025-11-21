@@ -501,6 +501,7 @@ elif modo == "💡 Banco de Ideias":
             st.info("Nenhuma ideia registrada ainda.")
 
 # --- TELA: ÁREA DO VEREADOR (RESTRITA) ---
+# --- TELA: ÁREA DO VEREADOR (RESTRITA) ---
 elif modo == "🔐 Área do Vereador":
     def voltar_inicio():
         st.session_state.navegacao = "🏠 Início"
@@ -512,26 +513,24 @@ elif modo == "🔐 Área do Vereador":
     if "vereador_logado" not in st.session_state:
         st.session_state["vereador_logado"] = None 
 
-    # --- LÓGICA DE LOGIN ---
+    # --- LÓGICA DE LOGIN (Inalterada) ---
     if not st.session_state["acesso_vereador"]:
         st.header("🔒 Acesso Restrito - Identificação")
         st.warning("Selecione seu nome e insira a senha de acesso da assessoria.")
 
-        # ATUALIZAÇÃO CRÍTICA: Usar a lista combinada LISTA_LOGIN
+        # Usa a lista combinada de Vereadores e Jurídicos
         usuario_identificado = st.selectbox("Eu sou:", ["Selecione seu nome..."] + LISTA_LOGIN) 
         senha_digitada = st.text_input("Digite a senha de acesso:", type="password")
 
         if st.button("Entrar"):
-            # Verifica se o usuário foi selecionado
-            if usuario_identificado != "Selecione seu nome..." and senha_digitada == "1955":
+            if usuario_identificado != "Selecione seu nome..." and senha_digitada == "camara2025":
                 st.session_state["acesso_vereador"] = True
-                # CRÍTICO: Armazena o usuário logado, que pode ser Jurídico ou Vereador
                 st.session_state["vereador_logado"] = usuario_identificado 
                 st.rerun()
             else:
                 st.error("Falha na autenticação. Verifique a senha e se o nome foi selecionado.")
 
-    # --- ÁREA LOGADA (Acesso Liberado com identidade travada) ---
+    # --- ÁREA LOGADA (Identidade Travada) ---
     else:
         autor_sessao = st.session_state["vereador_logado"]
 
@@ -547,26 +546,9 @@ elif modo == "🔐 Área do Vereador":
         
         with aba_ia:
             st.header("Elaboração de Documentos")
-            autor_sessao = st.session_state["vereador_logado"]
             
-            # --- LÓGICA DE PERMISSÃO DO JURÍDICO (NOVA) ---
-            # 1. Verifica se o usuário logado está na lista de Jurídicos
-            is_juridico = autor_sessao in LISTA_JURIDICO
-            
-            # 2. Define o comportamento do selectbox
-            if is_juridico:
-                st.info(f"Usuário logado: **{autor_sessao}**. Selecione o Vereador autor da matéria.")
-                autor_list = LISTA_VEREADORES # Jurídico vê a lista de todos os vereadores
-                autor_disabled = False
-            else:
-                st.info(f"Usuário logado: **{autor_sessao}**. Você é o autor da proposição.")
-                autor_list = [autor_sessao] # Vereador só se vê na lista
-                autor_disabled = True
-
-            # O selectbox agora é dinâmico, baseado na permissão
-            autor_selecionado = st.selectbox("Autor da Proposição:", autor_list, disabled=autor_disabled)
-            # --- FIM DA LÓGICA DE PERMISSÃO ---
-
+            # FIX: O AUTOR É SEMPRE O USUÁRIO LOGADO E O CAMPO É TRAVADO
+            autor_selecionado = st.selectbox("Autor da Proposição:", [autor_sessao], disabled=True)
             tipo_doc = st.selectbox("Tipo:", ["Pedido de Providência", "Pedido de Informação", "Indicação", "Projeto de Lei", "Moção de Aplauso", "Moção de Pesar"])
             
             if tipo_doc == "Projeto de Lei":
@@ -577,8 +559,8 @@ elif modo == "🔐 Área do Vereador":
             if st.button("📝 Elaborar Proposição"):
                 if texto_input:
                     with st.spinner('Redigindo documento com rigor técnico...'):
-                        # CRÍTICO: A função usa o autor_SELECIONADO, não o autor_sessao (o logado)
-                        texto_final = gerar_documento_ia(autor_selecionado, tipo_doc, texto_input) 
+                        # A função usa o autor_sessao (o nome logado)
+                        texto_final = gerar_documento_ia(autor_sessao, tipo_doc, texto_input)
                         
                         prop_id_novo = datetime.now().strftime("PROP_%Y%m%d%H%M%S")
                         st.session_state['prop_id'] = prop_id_novo
@@ -588,38 +570,44 @@ elif modo == "🔐 Área do Vereador":
                         st.session_state['tipo_doc_atual'] = tipo_doc
                         
                         salvar_historico(
-                            autor_selecionado, # CRÍTICO: Salva o autor SELECIONADO (o Vereador)
+                            autor_sessao, # Salva o nome logado
                             tipo_doc, 
                             texto_input, 
                             texto_final, 
                             prop_id_novo, 
                             1
                         )
-                        st.rerun() # Rerun para exibir a minuta gerada
+                        st.rerun()
             
-            # 2. SAÍDA (Onde a Minuta é Gerada)
+            # 2. SAÍDA
             if 'minuta_pronta' in st.session_state:
                 
-                # --- 1. AVISO LEGAL CRÍTICO ---
+                # 1. AVISO LEGAL CRÍTICO
                 st.error("🚨 AVISO LEGAL: Este texto é uma sugestão preliminar gerada por Inteligência Artificial (IA) e pode conter erros. Não possui validade jurídica. A responsabilidade pela análise, correção, adequação formal e constitucionalidade final é integralmente do Vereador(a) autor e de sua assessoria.")
                 
                 # 2. MINUTA ATUAL
                 st.subheader("Minuta Gerada:")
-
-                current_version = st.session_state['prop_version_num']
-                st.caption(f"Versão Atual: **V{current_version}** (Proposição ID: {st.session_state['prop_id']})")
-
                 minuta_para_copia = st.session_state['minuta_pronta']
-                st.text_area("Texto Final da Minuta:", value=minuta_para_copia, height=800, label_visibility="collapsed")
+                st.text_area("Texto Final da Minuta:", value=minuta_para_copia, height=500, label_visibility="collapsed")
                 
                 # 3. INSTRUÇÃO E BOTÕES DE AÇÃO
-                st.info("💡  Para copiar o texto pelo celular: Toque Longo dentro do campo - Selecionar tudo - Copiar. Depois use o botão Softcam para ir ao sistema e colar seu texto.")
+                st.info("💡 Para copiar o texto integral, selecione todo o conteúdo no campo acima (Ctrl+A no PC / Pressione e segure no celular).")
                 
+                # Botão Softcam
                 st.markdown("---")
+                st.link_button(
+                    "🌐 Ir para o Softcam", 
+                    "https://www.camaraespumoso.rs.gov.br/softcam/", 
+                    type="primary", 
+                    use_container_width=True
+                )
 
-                # --- 4. ÁREA DE REVISÃO E HISTÓRICO ---
+                # --- ÁREA DE REVISÃO E HISTÓRICO ---
+                st.markdown("---")
                 st.subheader("🔄 Revisão e Histórico")
 
+                current_version = st.session_state['prop_version_num']
+                
                 # REVISÃO IA
                 with st.form("form_revisao_ia", clear_on_submit=False):
                     st.write(f"Peça uma revisão ou melhoria para a **Versão V{current_version}**:")
@@ -628,20 +616,15 @@ elif modo == "🔐 Área do Vereador":
                     if st.form_submit_button("🔁 Gerar Nova Versão"):
                         if pedido_revisao:
                             with st.spinner('Revisando o documento com IA...'):
-                                
-                                # 1. Chama a IA para revisão
                                 nova_minuta = gerar_revisao_ia(
                                     st.session_state['minuta_pronta'], 
                                     pedido_revisao, 
                                     autor_sessao, 
                                     st.session_state['tipo_doc_atual']
                                 )
-                                
-                                # 2. Atualiza a versão e ID
                                 nova_versao_num = st.session_state['prop_version_num'] + 1
                                 prop_id_atual = st.session_state['prop_id']
                                 
-                                # 3. Salva a nova versão
                                 salvar_historico(
                                     autor_sessao, 
                                     st.session_state['tipo_doc_atual'], 
@@ -651,7 +634,6 @@ elif modo == "🔐 Área do Vereador":
                                     nova_versao_num
                                 )
                                 
-                                # 4. Atualiza o estado da sessão para exibir a nova minuta
                                 st.session_state['prop_version_num'] = nova_versao_num
                                 st.session_state['minuta_pronta'] = nova_minuta
                                 st.success(f"Nova Versão V{nova_versao_num} gerada com sucesso!")
@@ -660,12 +642,10 @@ elif modo == "🔐 Área do Vereador":
                             st.error("Por favor, insira uma instrução para a revisão.")
 
                 # HISTÓRICO DE VERSÕES (Com botão para carregar versões antigas)
-                st.markdown("---")
                 with st.expander(f"Histórico de Versões para Proposição {st.session_state['prop_id']}"):
                     if os.path.exists(arquivo_historico):
                         df_hist = pd.read_csv(arquivo_historico)
                         
-                        # Filtra apenas o histórico desta proposição e inverte a ordem (mais novo primeiro)
                         df_prop = df_hist[df_hist["ID_PROPOSICAO"] == st.session_state['prop_id']].sort_values(by="VERSAO_NUM", ascending=False)
                         
                         for index, row in df_prop.iterrows():
@@ -674,7 +654,6 @@ elif modo == "🔐 Área do Vereador":
                             else:
                                 col1, col2 = st.columns([1, 4])
                                 with col1:
-                                    # Botão para recarregar uma versão antiga
                                     if st.button(f"↩️ Carregar V{row['VERSAO_NUM']}", key=f"load_{row['ID_PROPOSICAO']}_{row['VERSAO_NUM']}"):
                                         st.session_state['minuta_pronta'] = row['MINUTA_TEXTO']
                                         st.session_state['prop_version_num'] = row['VERSAO_NUM']
@@ -683,28 +662,14 @@ elif modo == "🔐 Área do Vereador":
                                     st.write(f"Versão {row['VERSAO_NUM']} de {row['DATA_HORA']}")
                     else:
                         st.caption("Nenhum histórico encontrado para esta proposição.")
-
-                # Botão Softcam (Repetido no final da aba para acesso fácil)
-                st.markdown("---")
-                st.link_button(
-                    "🌐 Ir para o Softcam", 
-                    "https://www.camaraespumoso.rs.gov.br/softcam/", 
-                    type="primary", 
-                    use_container_width=True
-                )
-            else:
-                st.info("Aguardando a elaboração da minuta. Preencha o detalhamento acima.")
         
-        # --- ABA MURAL (Com correção do NameError) ---
         with aba_mural:
             st.header("📢 Publicar no Gabinete Virtual")
-            
-            # O autor do POST é o USUÁRIO LOGADO, não um vereador
-            st.write(f"Você está postando como **{autor_sessao}**.") 
+            st.write(f"Você está postando como **{autor_sessao}**.")
             
             with st.form("form_post_mural"):
-                # O CAMPO AUTOR POST DEVE ESTAR TRAVADO NO NOME DO USUÁRIO LOGADO
-                autor_post = st.selectbox("Quem está postando?", [autor_sessao], disabled=True) 
+                # O CAMPO AUTOR POST AGORA USA O NOME TRAVADO
+                autor_post = st.selectbox("Quem está postando?", [autor_sessao], disabled=True)
                 titulo_post = st.text_input("Título da Publicação (Ex: Visita à Escola X)")
                 mensagem_post = st.text_area("Texto da Publicação", height=150)
                 
@@ -712,7 +677,7 @@ elif modo == "🔐 Área do Vereador":
                     if titulo_post and mensagem_post:
                         dados_post = {
                             "Data": datetime.now().strftime("%d/%m/%Y"),
-                            "Vereador": autor_sessao, # Postagem usa o nome logado
+                            "Vereador": autor_sessao, # Postagem usa o nome travado
                             "Titulo": titulo_post,
                             "Mensagem": mensagem_post
                         }
@@ -727,10 +692,7 @@ elif modo == "🔐 Área do Vereador":
             st.info("Edite na tabela e clique em SALVAR para confirmar.")
             
             if os.path.exists(arquivo_mural):
-                # Carrega o DataFrame COMPLETO para permitir a separação
-                df_full = pd.read_csv(arquivo_mural) 
-                
-                # Filtra apenas as postagens do Vereador logado para edição
+                df_full = pd.read_csv(arquivo_mural)
                 df_vereador = df_full[df_full["Vereador"] == autor_sessao].copy()
                 
                 if df_vereador.empty:
@@ -739,13 +701,60 @@ elif modo == "🔐 Área do Vereador":
                     df_editado = st.data_editor(df_vereador, num_rows="dynamic", use_container_width=True, key="editor_mural")
                     
                     if st.button("💾 Salvar Alterações no Mural"):
-                        # 1. Separa as postagens de OUTROS vereadores
-                        df_others = df_full[df_full["Vereador"] != autor_sessao] # df_full está disponível
-                        
-                        # 2. Concatena os posts de outros com os posts editados
+                        df_others = df_full[df_full["Vereador"] != autor_sessao]
                         df_combined = pd.concat([df_others, df_editado], ignore_index=True)
-                        
-                        # 3. Salva o DataFrame combinado
                         df_combined.to_csv(arquivo_mural, index=False)
                         st.success("Mural atualizado com sucesso!")
                         st.rerun()
+
+# --- TELA: BANCO DE IDEIAS (PÚBLICA) ---
+elif modo == "💡 Banco de Ideias":
+    def voltar_inicio():
+        st.session_state.navegacao = "🏠 Início"
+    st.button("⬅️ Voltar para o Início", on_click=voltar_inicio, key="voltar_ideias")
+
+    st.title("Banco de Ideias - Espumoso/RS")
+    st.info("Bem-vindo(a)! Envie suas sugestões construtivas para a cidade.")
+    
+    with st.form("form_ideia_completo", clear_on_submit=True):
+        st.subheader("1. Sobre Você")
+        nome = st.text_input("Seu nome completo:", help="Precisamos dos seus dados apenas para que o Vereador possa, se necessário, entrar em contato para entender melhor a sua ideia. Seus dados estarão protegidos.")
+        contato = st.text_input("Seu número de celular:")
+        
+        st.subheader("2. Sua Ideia")
+        ideia_desc = st.text_area("Descreva sua sugestão:", height=150, help='Dica: Não se preocupe em escrever bonito.')
+        contribuicao = st.text_area("Como isso ajuda a comunidade?", height=100)
+        localizacao = st.text_input("Localização:")
+        areas = st.multiselect("Áreas:", ["Saúde", "Educação", "Obras", "Lazer", "Segurança", "Trânsito", "Outros"])
+
+        st.markdown("---")
+        st.subheader("3. Destino")
+        vereador = st.selectbox("Para qual vereador?", ["Escolha um vereador..."] + LISTA_VEREADORES)
+
+        st.markdown("---")
+        termos = st.checkbox("Li e concordo com os termos.")
+        
+        if st.form_submit_button("🚀 Enviar"):
+            if termos and ideia_desc and vereador != "Escolha um vereador...":
+                dados = {
+                    "Data": datetime.now().strftime("%d/%m/%Y %H:%M"),
+                    "Nome": nome, "Contato": contato, "Ideia": ideia_desc,
+                    "Contribuição": contribuicao, "Localização": localizacao,
+                    "Áreas": ", ".join(areas), "Vereador Destino": vereador, "Concordou Termos": "Sim"
+                }
+                salvar_ideia(dados)
+                st.balloons()
+                st.success("Enviado com sucesso!")
+            else:
+                st.error("Preencha os campos obrigatórios e aceite os termos.")
+
+    st.divider()
+    st.subheader("🔐 Área Administrativa")
+    senha = st.text_input("Senha ADM:", type="password")
+    if senha == "admin123":
+        st.success("Acesso Liberado!")
+        if os.path.exists(arquivo_ideias):
+            df = pd.read_csv(arquivo_ideias)
+            st.dataframe(df, use_container_width=True)
+            csv = df.to_csv(index=False).encode('utf-8')
+            st.download_button("📥 Baixar Relatório", data=csv, file_name="ideias.csv", mime="text/csv")
