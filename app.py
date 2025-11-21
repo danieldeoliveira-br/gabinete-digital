@@ -5,7 +5,6 @@ from datetime import datetime
 from groq import Groq
 
 # --- CONFIGURAÇÃO DA PÁGINA ---
-# Nota: O tema escuro é configurado no arquivo .streamlit/config.toml
 st.set_page_config(page_title="Legislativo Digital", page_icon="🏛️", layout="wide")
 
 # --- CONFIGURAÇÃO DA IA ---
@@ -34,7 +33,6 @@ def gerar_documento_ia(autor, tipo_doc, assunto):
     
     client = Groq(api_key=api_key)
     
-    # Regras específicas para evitar Vício de Iniciativa
     if tipo_doc == "Projeto de Lei":
         regras_especificas = """
         TÉCNICA LEGISLATIVA (OBRIGATÓRIO):
@@ -273,31 +271,47 @@ elif modo == "🔐 Área do Vereador":
         st.session_state.navegacao = "🏠 Início"
     st.button("⬅️ Voltar para o Início", on_click=voltar_inicio, key="voltar_assistente")
 
+    # Inicializa ou mantém o estado de acesso
     if "acesso_vereador" not in st.session_state:
         st.session_state["acesso_vereador"] = False
+    if "vereador_logado" not in st.session_state:
+        st.session_state["vereador_logado"] = None # <-- RESTAURADA A VARIÁVEL FALTANTE
 
+    # --- LÓGICA DE LOGIN ---
     if not st.session_state["acesso_vereador"]:
-        st.header("🔒 Acesso Restrito")
-        st.warning("Esta ferramenta é exclusiva para Vereadores e Assessores.")
+        st.header("🔒 Acesso Restrito - Identificação")
+        st.warning("Selecione seu nome e insira a senha de acesso da assessoria.")
+
+        # CAMPO QUE FOI RESTAURADO
+        vereador_identificado = st.selectbox("Eu sou:", ["Selecione seu nome..."] + LISTA_VEREADORES)
         senha_digitada = st.text_input("Digite a senha de acesso:", type="password")
+
         if st.button("Entrar"):
-            if senha_digitada == "camara2025": 
+            # Verifica se o vereador foi selecionado e a senha está correta
+            if vereador_identificado != "Selecione seu nome..." and senha_digitada == "camara2025":
                 st.session_state["acesso_vereador"] = True
+                st.session_state["vereador_logado"] = vereador_identificado # Armazena a identidade
                 st.rerun()
             else:
-                st.error("Senha incorreta.")
+                st.error("Falha na autenticação. Verifique a senha e se o nome foi selecionado.")
+
+    # --- ÁREA LOGADA (Acesso Liberado com identidade travada) ---
     else:
+        autor_sessao = st.session_state["vereador_logado"]
+
         if st.button("Sair do Modo Restrito", type="secondary"):
             st.session_state["acesso_vereador"] = False
+            st.session_state["vereador_logado"] = None
             st.rerun()
-        
+
         st.divider()
+        st.success(f"Acesso Liberado para **{autor_sessao}**.")
         
         aba_ia, aba_mural = st.tabs(["⚖️ Criar Documentos (IA)", "📢 Gerenciar Mural"])
         
         with aba_ia:
             st.header("Elaboração de Documentos")
-            autor_selecionado = st.selectbox("Autor da Proposição:", LISTA_VEREADORES)
+            autor_selecionado = st.selectbox("Autor da Proposição:", [autor_sessao], disabled=True)
             tipo_doc = st.selectbox("Tipo:", ["Pedido de Providência", "Pedido de Informação", "Indicação", "Projeto de Lei", "Moção de Aplauso", "Moção de Pesar"])
             
             if tipo_doc == "Projeto de Lei":
@@ -307,8 +321,8 @@ elif modo == "🔐 Área do Vereador":
             
             if st.button("📝 Elaborar Proposição"):
                 if texto_input:
-                    with st.spinner('Redigindo documento com rigor técnico...'):
-                        texto_final = gerar_documento_ia(autor_selecionado, tipo_doc, texto_input)
+                    with st.spinner('Redigindo...'):
+                        texto_final = gerar_documento_ia(autor_sessao, tipo_doc, texto_input) # Usa o autor logado
                         st.session_state['minuta_pronta'] = texto_final
             
             # 2. SAÍDA (Aparece somente se houver texto gerado)
@@ -323,7 +337,7 @@ elif modo == "🔐 Área do Vereador":
                 col_copy, col_softcam = st.columns([1, 1])
                 
                 with col_copy:
-                    # O BOTÃO FINAL DE COPIA/DOWNLOAD (Versão mais robusta para celular)
+                    # O BOTÃO FINAL DE DOWNLOAD/COPIA SIMULADA (O mais robusto)
                     st.download_button(
                         label="📋 COPIAR TEXTO", 
                         data=minuta_para_copia.encode('utf-8'),
@@ -343,6 +357,41 @@ elif modo == "🔐 Área do Vereador":
                     )
             else:
                 st.info("Aguardando a elaboração da minuta. Preencha o detalhamento acima.")
+        
+        with aba_mural:
+            st.header("📢 Publicar no Gabinete Virtual")
+            st.write(f"Você está postando como **{autor_sessao}**.")
+            
+            with st.form("form_post_mural"):
+                autor_post = st.selectbox("Quem está postando?", [autor_sessao], disabled=True)
+                titulo_post = st.text_input("Título da Publicação (Ex: Visita à Escola X)")
+                mensagem_post = st.text_area("Texto da Publicação", height=150)
+                
+                if st.form_submit_button("Publicar no Mural 🚀"):
+                    if titulo_post and mensagem_post:
+                        dados_post = {
+                            "Data": datetime.now().strftime("%d/%m/%Y"),
+                            "Vereador": autor_sessao, # Usa o nome travado
+                            "Titulo": titulo_post,
+                            "Mensagem": mensagem_post
+                        }
+                        salvar_post_mural(dados_post)
+                        st.success("Publicado com sucesso! Veja na aba 'Gabinete Virtual'.")
+                        st.rerun()
+                    else:
+                        st.error("Preencha título e mensagem.")
+            
+            st.divider()
+            st.subheader("🗑️ Editar ou Excluir Postagens Antigas")
+            st.info("Edite na tabela e clique em SALVAR para confirmar.")
+            
+            if os.path.exists(arquivo_mural):
+                df_mural = pd.read_csv(arquivo_mural)
+                df_editado = st.data_editor(df_mural, num_rows="dynamic", use_container_width=True, key="editor_mural")
+                if st.button("💾 Salvar Alterações no Mural"):
+                    df_editado.to_csv(arquivo_mural, index=False)
+                    st.success("Mural atualizado com sucesso!")
+                    st.rerun()
 
 # --- TELA: BANCO DE IDEIAS (PÚBLICA) ---
 elif modo == "💡 Banco de Ideias":
