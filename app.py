@@ -323,18 +323,21 @@ elif modo == "🔐 Área do Vereador":
                         texto_final = gerar_documento_ia(autor_sessao, tipo_doc, texto_input)
                         st.session_state['minuta_pronta'] = texto_final
             
-            # 2. SAÍDA (Aparece somente se houver texto gerado)
+            # 2. SAÍDA (Onde a Minuta é Gerada)
             if 'minuta_pronta' in st.session_state:
+                
+                # --- AVISO LEGAL DE RESPONSABILIDADE (BLOQUEIO VERMELHO) ---
+                st.error("🚨 AVISO LEGAL: Este texto é uma sugestão preliminar gerada por Inteligência Artificial (IA). Não possui validade jurídica. A responsabilidade pela análise, correção, adequação formal e constitucionalidade final é integralmente do Vereador(a) autor e de sua assessoria.")
+                # -----------------------------------------------------------
+                
                 st.subheader("Minuta Gerada:")
                 
                 minuta_para_copia = st.session_state['minuta_pronta']
+                st.text_area("Texto Final da Minuta:", value=minuta_para_copia, height=500, label_visibility="collapsed")
                 
-                # --- SAÍDA DO TEXTO FLEXÍVEL (Corrige a quebra de linha) ---
-                st.text_area("Texto Final da Minuta:", value=minuta_para_copia, height=500)
-                
+                # Botões de Ação Final
                 st.info("💡 Para copiar o texto pelo celular: Toque Longo dentro do campo - Selecionar tudo - Copiar. Depois use o botão Softcam para ir ao sistema e colar seu texto.")
                 
-                # Botão Softcam (O único que importa para o fluxo)
                 st.markdown("---")
                 st.link_button(
                     "🌐 Ir para o Softcam", 
