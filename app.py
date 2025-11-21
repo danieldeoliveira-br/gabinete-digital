@@ -263,7 +263,7 @@ def botao_copiar_para_clipboard(texto, label="📋 Copiar texto", height=70):
 if os.path.exists("brasao.png"):
     st.sidebar.image("brasao.png", width=120)
 
-st.sidebar.title("Gabinete Digital | Espumoso")
+st.sidebar.title("Gabinete Digital")
 st.sidebar.markdown("**Câmara Municipal de Espumoso**")
 st.sidebar.markdown("Rio Grande do Sul")
 st.sidebar.markdown("[🌐 Site Oficial](https://www.camaraespumoso.rs.gov.br)")
