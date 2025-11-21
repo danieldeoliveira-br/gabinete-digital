@@ -782,7 +782,7 @@ elif modo == "💡 Banco de Ideias":
             enviou = st.form_submit_button("Acessar")
 
         if enviou:
-            if senha == "12345":
+            if senha == "123321":
                 st.session_state["admin_logado"] = True
                 st.rerun()
             else:
@@ -798,33 +798,25 @@ elif modo == "💡 Banco de Ideias":
 
         st.markdown("---")
         st.subheader("📋 Gerenciamento de Ideias Recebidas")
-        
-        # INSTRUÇÃO MELHORADA: Explica como apagar a linha
-        st.caption("Para **apagar uma ideia**, clique na linha desejada e pressione a tecla **'Delete'** no teclado, ou use o **menu de três pontos** no índice da linha para a opção de exclusão. Após as alterações, clique em **'Salvar Alterações'** para confirmar.")
 
         if os.path.exists(arquivo_ideias):
             df_ideias = pd.read_csv(arquivo_ideias)
             
-            # --- TABELA INTERATIVA (EDIÇÃO E EXCLUSÃO SELETIVA) ---
-            df_editado = st.data_editor(
-                df_ideias, 
-                num_rows="dynamic", 
-                use_container_width=True, 
-                key="editor_ideias"
-            )
-            
-            # Botões de Ação
+            # --- BOTÕES MOVIDOS PARA O TOPO DA TABELA ---
             col_save, col_download = st.columns([1, 1])
 
             with col_save:
                 if st.button("💾 Salvar Alterações na Tabela", use_container_width=True):
-                    # ESTA AÇÃO SALVA AS EDIÇÕES E AS EXCLUSÕES FEITAS NO EDITOR
-                    df_editado.to_csv(arquivo_ideias, index=False)
-                    st.success("Tabela de ideias atualizada com sucesso!")
-                    st.rerun() 
-
+                    # Salva o DataFrame editado de volta ao CSV (depende do df_editado ser definido!)
+                    if 'editor_ideias' in st.session_state:
+                        st.session_state['editor_ideias'].to_csv(arquivo_ideias, index=False)
+                        st.success("Tabela de ideias atualizada com sucesso!")
+                        st.rerun()
+                    else:
+                        st.warning("Nenhuma alteração detectada para salvar.")
+                        
             with col_download:
-                # Botão de Download (permanece funcional)
+                # Botão de Download
                 csv = df_ideias.to_csv(index=False).encode('utf-8')
                 st.download_button(
                     "📥 Baixar Relatório Completo", 
@@ -833,6 +825,16 @@ elif modo == "💡 Banco de Ideias":
                     mime="text/csv", 
                     use_container_width=True
                 )
+            
+            st.caption("Para apagar uma ideia, selecione a linha desejada e pressione a tecla 'Delete'. Clique em 'Salvar' acima para confirmar.")
+            
+            # --- TABELA INTERATIVA (FICA ABAIXO DOS BOTÕES) ---
+            st.data_editor(
+                df_ideias, 
+                num_rows="dynamic", 
+                use_container_width=True, 
+                key="editor_ideias" # O componente que armazena os dados editados
+            )
             
         else:
             st.info("Nenhuma ideia registrada ainda.")
