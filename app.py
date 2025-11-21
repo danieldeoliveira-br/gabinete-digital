@@ -472,10 +472,8 @@ elif modo == "🔐 Área do Vereador":
         
         with aba_ia:
             st.header("Elaboração de Documentos")
-            
-            # --- ÁREA DE CRIAÇÃO ---
             autor_selecionado = st.selectbox("Autor da Proposição:", [autor_sessao], disabled=True)
-            tipo_doc = st.selectbox("Tipo:", ["Pedido de Providência", "Pedido de Informação", "Indicação", "Projeto de Lei", "Moção"])
+            tipo_doc = st.selectbox("Tipo:", ["Pedido de Providência", "Pedido de Informação", "Indicação", "Projeto de Lei", "Moção de Aplauso", "Moção de Pesar"])
             
             if tipo_doc == "Projeto de Lei":
                 st.warning("⚠️ Atenção: A IA evitará Vício de Iniciativa criando leis 'Autorizativas' quando necessário.")
@@ -486,49 +484,60 @@ elif modo == "🔐 Área do Vereador":
                 if texto_input:
                     with st.spinner('Redigindo documento com rigor técnico...'):
                         texto_final = gerar_documento_ia(autor_sessao, tipo_doc, texto_input)
+                        st.session_state['minuta_pronta'] = texto_final
                         
-                        # --- LÓGICA DE HISTÓRICO - NOVA PROPOSIÇÃO (Versão 1) ---
-                        prop_id_novo = datetime.now().strftime("PROP_%Y%m%d%H%M%S") # ID baseado em tempo
+                        # Lógica de Versão 1 e Salvamento
+                        prop_id_novo = datetime.now().strftime("PROP_%Y%m%d%H%M%S")
                         st.session_state['prop_id'] = prop_id_novo
                         st.session_state['prop_version_num'] = 1
-                        st.session_state['minuta_pronta'] = texto_final
-                        st.session_state['assunto_atual'] = texto_input # Salva o assunto original
-                        st.session_state['tipo_doc_atual'] = tipo_doc # Salva o tipo de documento
-                        
-                        # Salva a Versão 1 no histórico
-                        salvar_historico(
-                            autor_sessao, 
-                            tipo_doc, 
-                            texto_input, 
-                            texto_final, 
-                            prop_id_novo, 
-                            1
-                        )
-                        st.rerun() # Rerun para exibir a minuta gerada
+                        st.session_state['assunto_atual'] = texto_input
+                        st.session_state['tipo_doc_atual'] = tipo_doc
+                        salvar_historico(autor_sessao, tipo_doc, texto_input, texto_final, prop_id_novo, 1)
+                        st.rerun() 
             
             # 2. SAÍDA (Onde a Minuta é Gerada)
             if 'minuta_pronta' in st.session_state:
                 
-                # --- 1. AVISO LEGAL CRÍTICO ---
+                # 1. AVISO LEGAL CRÍTICO
                 st.error("🚨 AVISO LEGAL: Este texto é uma sugestão preliminar gerada por Inteligência Artificial (IA) e pode conter erros. Não possui validade jurídica. A responsabilidade pela análise, correção, adequação formal e constitucionalidade final é integralmente do Vereador(a) autor e de sua assessoria.")
                 
-                # 2. MINUTA ATUAL
                 st.subheader("Minuta Gerada:")
-
-                current_version = st.session_state['prop_version_num']
-                st.caption(f"Versão Atual: **V{current_version}** (Proposição ID: {st.session_state['prop_id']})")
-
+                
                 minuta_para_copia = st.session_state['minuta_pronta']
-                st.text_area("Texto Final da Minuta:", value=minuta_para_copia, height=800, label_visibility="collapsed")
+                st.text_area("Texto Final da Minuta:", value=minuta_para_copia, height=500, key="minuta_output_field", label_visibility="collapsed")
                 
-                # 3. INSTRUÇÃO E BOTÕES DE AÇÃO
-                st.info("💡  Para copiar o texto pelo celular: Toque Longo dentro do campo - Selecionar tudo - Copiar. Depois use o botão Softcam para ir ao sistema e colar seu texto.")
+                # --- BOTÕES DE AÇÃO FINAL ---
+                col_copy, col_softcam = st.columns([1, 1])
                 
-                st.markdown("---")
+                # Prepara o texto para injeção no JavaScript (evitando quebras)
+                minuta_js_safe = minuta_para_copia.replace('\n', '\\n').replace('"', '\\"').replace('\'', '\\\'')
 
-                # --- 4. ÁREA DE REVISÃO E HISTÓRICO ---
+                with col_copy:
+                    # BOTÃO CUSTOMIZADO DE CÓPIA (Solução JS)
+                    st.markdown(
+                        f"""
+                        <button onclick="navigator.clipboard.writeText('{minuta_js_safe}'); alert('Texto copiado para a área de transferência!');"
+                                style="background-color: #FAFAFA; color: #128C7E; border: 2px solid #128C7E; border-radius: 8px; padding: 12px; font-weight: bold; width: 100%; cursor: pointer;">
+                            📋 COPIAR TEXTO
+                        </button>
+                        """, 
+                        unsafe_allow_html=True
+                    )
+                
+                with col_softcam:
+                    st.link_button(
+                        "🌐 Ir para o Softcam", 
+                        "https://www.camaraespumoso.rs.gov.br/softcam/", 
+                        type="primary", 
+                        use_container_width=True
+                    )
+
+                # --- ÁREA DE REVISÃO E HISTÓRICO ---
+                st.markdown("---")
                 st.subheader("🔄 Revisão e Histórico")
 
+                current_version = st.session_state['prop_version_num']
+                
                 # REVISÃO IA
                 with st.form("form_revisao_ia", clear_on_submit=False):
                     st.write(f"Peça uma revisão ou melhoria para a **Versão V{current_version}**:")
@@ -537,20 +546,15 @@ elif modo == "🔐 Área do Vereador":
                     if st.form_submit_button("🔁 Gerar Nova Versão"):
                         if pedido_revisao:
                             with st.spinner('Revisando o documento com IA...'):
-                                
-                                # 1. Chama a IA para revisão
                                 nova_minuta = gerar_revisao_ia(
                                     st.session_state['minuta_pronta'], 
                                     pedido_revisao, 
                                     autor_sessao, 
                                     st.session_state['tipo_doc_atual']
                                 )
-                                
-                                # 2. Atualiza a versão e ID
                                 nova_versao_num = st.session_state['prop_version_num'] + 1
                                 prop_id_atual = st.session_state['prop_id']
                                 
-                                # 3. Salva a nova versão
                                 salvar_historico(
                                     autor_sessao, 
                                     st.session_state['tipo_doc_atual'], 
@@ -560,7 +564,6 @@ elif modo == "🔐 Área do Vereador":
                                     nova_versao_num
                                 )
                                 
-                                # 4. Atualiza o estado da sessão para exibir a nova minuta
                                 st.session_state['prop_version_num'] = nova_versao_num
                                 st.session_state['minuta_pronta'] = nova_minuta
                                 st.success(f"Nova Versão V{nova_versao_num} gerada com sucesso!")
@@ -569,12 +572,10 @@ elif modo == "🔐 Área do Vereador":
                             st.error("Por favor, insira uma instrução para a revisão.")
 
                 # HISTÓRICO DE VERSÕES (Com botão para carregar versões antigas)
-                st.markdown("---")
                 with st.expander(f"Histórico de Versões para Proposição {st.session_state['prop_id']}"):
                     if os.path.exists(arquivo_historico):
                         df_hist = pd.read_csv(arquivo_historico)
                         
-                        # Filtra apenas o histórico desta proposição e inverte a ordem (mais novo primeiro)
                         df_prop = df_hist[df_hist["ID_PROPOSICAO"] == st.session_state['prop_id']].sort_values(by="VERSAO_NUM", ascending=False)
                         
                         for index, row in df_prop.iterrows():
@@ -583,7 +584,6 @@ elif modo == "🔐 Área do Vereador":
                             else:
                                 col1, col2 = st.columns([1, 4])
                                 with col1:
-                                    # Botão para recarregar uma versão antiga
                                     if st.button(f"↩️ Carregar V{row['VERSAO_NUM']}", key=f"load_{row['ID_PROPOSICAO']}_{row['VERSAO_NUM']}"):
                                         st.session_state['minuta_pronta'] = row['MINUTA_TEXTO']
                                         st.session_state['prop_version_num'] = row['VERSAO_NUM']
@@ -592,17 +592,6 @@ elif modo == "🔐 Área do Vereador":
                                     st.write(f"Versão {row['VERSAO_NUM']} de {row['DATA_HORA']}")
                     else:
                         st.caption("Nenhum histórico encontrado para esta proposição.")
-
-                # Botão Softcam (Repetido no final da aba para acesso fácil)
-                st.markdown("---")
-                st.link_button(
-                    "🌐 Ir para o Softcam", 
-                    "https://www.camaraespumoso.rs.gov.br/softcam/", 
-                    type="primary", 
-                    use_container_width=True
-                )
-            else:
-                st.info("Aguardando a elaboração da minuta. Preencha o detalhamento acima.")
         
         # --- ABA MURAL (Com correção do NameError) ---
         with aba_mural:
