@@ -29,6 +29,14 @@ LISTA_VEREADORES = [
     "Vereador Tomas Fiuza (PROGRESSISTAS)"
 ]
 
+# --- NOVAS LISTAS DE ACESSO ---
+LISTA_JURIDICO = [
+    "Assessoria Jurídica" # Adicione quantos forem necessários
+]
+
+# LISTA UNIFICADA PARA O LOGIN
+LISTA_LOGIN = LISTA_VEREADORES + LISTA_JURIDICO
+
 # --- ARQUIVOS DE DADOS GLOBAIS ---
 arquivo_ideias = "banco_de_ideias.csv"
 arquivo_mural = "mural_posts.csv"
@@ -509,16 +517,19 @@ elif modo == "🔐 Área do Vereador":
         st.header("🔒 Acesso Restrito - Identificação")
         st.warning("Selecione seu nome e insira a senha de acesso da assessoria.")
 
-        vereador_identificado = st.selectbox("Eu sou:", ["Selecione seu nome..."] + LISTA_VEREADORES)
+        # ATUALIZAÇÃO CRÍTICA: Usar a lista combinada LISTA_LOGIN
+        usuario_identificado = st.selectbox("Eu sou:", ["Selecione seu nome..."] + LISTA_LOGIN) 
         senha_digitada = st.text_input("Digite a senha de acesso:", type="password")
 
         if st.button("Entrar"):
-            if vereador_identificado != "Selecione seu nome..." and senha_digitada == "1955":
+            # Verifica se o usuário foi selecionado
+            if usuario_identificado != "Selecione seu nome..." and senha_digitada == "camara2025":
                 st.session_state["acesso_vereador"] = True
-                st.session_state["vereador_logado"] = vereador_identificado 
+                # CRÍTICO: Armazena o usuário logado, que pode ser Jurídico ou Vereador
+                st.session_state["vereador_logado"] = usuario_identificado 
                 st.rerun()
             else:
-                st.error("Falha na autenticação. Verifique a senha e se o seu nome foi selecionado.")
+                st.error("Falha na autenticação. Verifique a senha e se o nome foi selecionado.")
 
     # --- ÁREA LOGADA (Acesso Liberado com identidade travada) ---
     else:
@@ -536,11 +547,20 @@ elif modo == "🔐 Área do Vereador":
         
         with aba_ia:
             st.header("Elaboração de Documentos")
+            autor_sessao = st.session_state["vereador_logado"]
             
-            # --- ÁREA DE CRIAÇÃO ---
-            autor_selecionado = st.selectbox("Autor da Proposição:", [autor_sessao], disabled=True)
-            tipo_doc = st.selectbox("Tipo:", ["Pedido de Providência", "Pedido de Informação", "Indicação", "Projeto de Lei", "Moção"])
+            # --- NOVA LÓGICA DE AUTORIZAÇÃO ---
+            is_juridico = autor_sessao in LISTA_JURIDICO
             
+            if is_juridico:
+                st.info(f"Usuário logado: **{autor_sessao}**. Selecione o Vereador que será o autor oficial da matéria.")
+                autor_selecionado = st.selectbox("Autor da Proposição:", LISTA_VEREADORES)
+            else:
+                # O Vereador logado é o autor, e o campo fica desabilitado
+                autor_selecionado = st.selectbox("Autor da Proposição:", [autor_sessao], disabled=True)
+            # --- FIM DA NOVA LÓGICA ---
+            
+            tipo_doc = st.selectbox("Tipo:", ["Pedido de Providência", "Pedido de Informação", "Indicação", "Projeto de Lei", "Moção de Aplauso", "Moção de Pesar"])
             if tipo_doc == "Projeto de Lei":
                 st.warning("⚠️ Atenção: A IA evitará Vício de Iniciativa criando leis 'Autorizativas' quando necessário.")
             
