@@ -275,14 +275,14 @@ elif modo == "🔐 Área do Vereador":
     if "acesso_vereador" not in st.session_state:
         st.session_state["acesso_vereador"] = False
     if "vereador_logado" not in st.session_state:
-        st.session_state["vereador_logado"] = None # <-- RESTAURADA A VARIÁVEL FALTANTE
+        st.session_state["vereador_logado"] = None 
 
     # --- LÓGICA DE LOGIN ---
     if not st.session_state["acesso_vereador"]:
         st.header("🔒 Acesso Restrito - Identificação")
         st.warning("Selecione seu nome e insira a senha de acesso da assessoria.")
 
-        # CAMPO QUE FOI RESTAURADO
+        # Campo para identificação ANTES do login
         vereador_identificado = st.selectbox("Eu sou:", ["Selecione seu nome..."] + LISTA_VEREADORES)
         senha_digitada = st.text_input("Digite a senha de acesso:", type="password")
 
@@ -311,7 +311,8 @@ elif modo == "🔐 Área do Vereador":
         
         with aba_ia:
             st.header("Elaboração de Documentos")
-            autor_selecionado = st.selectbox("Autor da Proposição:", LISTA_VEREADORES)
+            # FIX: O selectbox usa APENAS o nome do vereador logado e é DESABILITADO
+            autor_selecionado = st.selectbox("Autor da Proposição:", [autor_sessao], disabled=True)
             tipo_doc = st.selectbox("Tipo:", ["Pedido de Providência", "Pedido de Informação", "Indicação", "Projeto de Lei", "Moção de Aplauso", "Moção de Pesar"])
             
             if tipo_doc == "Projeto de Lei":
@@ -321,19 +322,17 @@ elif modo == "🔐 Área do Vereador":
             
             if st.button("📝 Elaborar Proposição"):
                 if texto_input:
-                    with st.spinner('Redigindo documento com rigor técnico...'):
-                        texto_final = gerar_documento_ia(autor_selecionado, tipo_doc, texto_input)
+                    with st.spinner('Redigindo...'):
+                        texto_final = gerar_documento_ia(autor_sessao, tipo_doc, texto_input) # Usa o autor logado
                         st.session_state['minuta_pronta'] = texto_final
             
-            # 2. SAÍDA (Aparece somente se houver texto gerado)
+            # 2. SAÍDA
             if 'minuta_pronta' in st.session_state:
                 st.subheader("Minuta Gerada:")
                 
-                # O BOTÃO DISCRETO DE COPIA VOLTA AQUI (st.code tem ícone nativo)
                 minuta_para_copia = st.session_state['minuta_pronta']
-                st.code(minuta_para_copia, language="markdown")
+                st.code(minuta_para_copia, language="markdown") # Botão de cópia discreto
                 
-                # Botão de Ação Final (Apenas Softcam)
                 st.markdown("---")
                 st.link_button(
                     "🌐 Ir para o Softcam", 
@@ -349,6 +348,7 @@ elif modo == "🔐 Área do Vereador":
             st.write(f"Você está postando como **{autor_sessao}**.")
             
             with st.form("form_post_mural"):
+                # FIX: O selectbox usa APENAS o nome do vereador logado e é DESABILITADO
                 autor_post = st.selectbox("Quem está postando?", [autor_sessao], disabled=True)
                 titulo_post = st.text_input("Título da Publicação (Ex: Visita à Escola X)")
                 mensagem_post = st.text_area("Texto da Publicação", height=150)
@@ -357,7 +357,7 @@ elif modo == "🔐 Área do Vereador":
                     if titulo_post and mensagem_post:
                         dados_post = {
                             "Data": datetime.now().strftime("%d/%m/%Y"),
-                            "Vereador": autor_sessao, # Usa o nome travado
+                            "Vereador": autor_sessao,
                             "Titulo": titulo_post,
                             "Mensagem": mensagem_post
                         }
@@ -369,15 +369,30 @@ elif modo == "🔐 Área do Vereador":
             
             st.divider()
             st.subheader("🗑️ Editar ou Excluir Postagens Antigas")
-            st.info("Edite na tabela e clique em SALVAR para confirmar.")
+            st.info("Você só pode editar ou excluir suas próprias postagens. Edite na tabela e clique em SALVAR para confirmar.")
             
             if os.path.exists(arquivo_mural):
-                df_mural = pd.read_csv(arquivo_mural)
-                df_editado = st.data_editor(df_mural, num_rows="dynamic", use_container_width=True, key="editor_mural")
-                if st.button("💾 Salvar Alterações no Mural"):
-                    df_editado.to_csv(arquivo_mural, index=False)
-                    st.success("Mural atualizado com sucesso!")
-                    st.rerun()
+                # FILTRA PARA MOSTRAR APENAS AS POSTAGENS DO VEREADOR LOGADO
+                df_full = pd.read_csv(arquivo_mural)
+                df_vereador = df_full[df_full["Vereador"] == autor_sessao].copy()
+                
+                if df_vereador.empty:
+                    st.info("Você ainda não tem postagens no mural.")
+                else:
+                    # Permite a edição (incluindo exclusão de linhas)
+                    df_editado = st.data_editor(df_vereador, num_rows="dynamic", use_container_width=True, key="editor_mural")
+                    
+                    if st.button("💾 Salvar Alterações no Mural"):
+                        # 1. Separa as postagens de OUTROS vereadores
+                        df_others = df_full[df_full["Vereador"] != autor_sessao]
+                        
+                        # 2. Concatena as postagens de outros com as postagens editadas (do autor logado)
+                        df_combined = pd.concat([df_others, df_editado], ignore_index=True)
+                        
+                        # 3. Salva o DataFrame combinado (com as edições)
+                        df_combined.to_csv(arquivo_mural, index=False)
+                        st.success("Mural atualizado com sucesso!")
+                        st.rerun()
 
 # --- TELA: BANCO DE IDEIAS (PÚBLICA) ---
 elif modo == "💡 Banco de Ideias":
