@@ -89,20 +89,65 @@ def salvar_post_mural(dados):
 
 # --- FUNÇÕES IA ---
 
-def gerar_revisao_ia(texto_base, pedido_revisao, autor, tipo_doc):
-    if not api_key: return "⚠️ ERRO: Chave API não encontrada!"
+# --- FUNÇÃO: REDATOR IA (Para a primeira geração) ---
+def gerar_documento_ia(autor, tipo_doc, assunto):
+    """Gera a primeira minuta do documento com base nas regras de técnica legislativa."""
+    if not api_key:
+        return "⚠️ ERRO: A chave da API não foi encontrada nos Secrets!"
+    
     client = Groq(api_key=api_key)
+    
+    if tipo_doc == "Projeto de Lei":
+        regras_especificas = """
+        TÉCNICA LEGISLATIVA (OBRIGATÓRIO):
+        1. O texto da lei deve vir IMEDIATAMENTE após a Ementa.
+        2. Use Artigos (Art. 1º, Art. 2º...), Parágrafos (§ 1º) e Incisos (I, II).
+        3. Linguagem: Formal, Impessoal e Imperativa.
+        4. VÍCIO DE INICIATIVA: Se o assunto gerar despesa ou envolver gestão interna da prefeitura, use 'Fica o Poder Executivo AUTORIZADO a instituir...'.
+        5. CLÁUSULAS PADRÃO:
+           - Penúltimo Artigo: 'O Poder Executivo regulamentará a presente Lei no que couber.'
+           - Último Artigo: 'Esta Lei entra em vigor na data de sua publicação.'
+        """
+    else:
+        regras_especificas = """
+        ESTRUTURA DE TEXTO CORRIDO (Para Indicações/Pedidos):
+        1. Inicie com: 'O Vereador que este subscreve, no uso de suas atribuições legais e regimentais...'
+        2. Texto corrido, sem artigos.
+        3. Seja direto na solicitação.
+        """
+
     prompt = f"""
-    Você é um Procurador Jurídico Sênior. REVISE a minuta abaixo.
-    Vereador: {autor} | Tipo: {tipo_doc} | Pedido: {pedido_revisao}
-    ---
-    TEXTO ATUAL:
-    {texto_base}
-    ---
-    Gere a NOVA VERSÃO mantendo a estrutura formal. Correção gramatical impecável.
-    Adicione TRÊS LINHAS EM BRANCO entre seções para leitura.
-    PROIBIDO USAR HTML.
+    Atue como um Procurador Jurídico Sênior da Câmara Municipal de Espumoso/RS.
+    Redija uma minuta de {tipo_doc} com alto rigor técnico e seja formal.
+    
+    AUTOR: {autor}.
+    ASSUNTO: {assunto}.
+    
+    ORDEM OBRIGATÓRIA DO DOCUMENTO (NÃO INVERTA):
+    
+    1. CABEÇALHO: "EXCELENTÍSSIMO SENHOR PRESIDENTE DA CÂMARA MUNICIPAL DE ESPUMOSO – RS"
+    
+    2. PREÂMBULO: "{autor}, integrante da Bancada [Extrair Partido], no uso de suas atribuições legais e regimentais, submete à apreciação do Plenário o seguinte {tipo_doc.upper()}:"
+    
+    3. EMENTA: (Resumo do assunto em caixa alta, negrito e centralizado).
+    
+    4. TEXTO DA PROPOSIÇÃO (AQUI ENTRAM OS ARTIGOS OU O PEDIDO):
+       {regras_especificas}
+    
+    5. JUSTIFICATIVA (SOMENTE DEPOIS DO TEXTO DA LEI):
+       Título: "JUSTIFICATIVA" (em negrito)
+       Escreva um texto dissertativo-argumentativo formal defendendo a proposta.
+       Foque na relevância social, jurídica e no interesse público.
+    
+    6. FECHAMENTO:
+       "Plenário Agostinho Somavilla, {datetime.now().strftime('%d de %B de %Y').replace('January', 'Janeiro').replace('February', 'Fevereiro').replace('March', 'Março').replace('April', 'Abril').replace('May', 'Maio').replace('June', 'Junho').replace('July', 'Julho').replace('August', 'Agosto').replace('September', 'Setembro').replace('October', 'Outubro').replace('November', 'Novembro').replace('December', 'Dezembro')}."
+       (Espaço para assinatura)
+       {autor}
+       
+    IMPORTANTE: Adicione um mínimo de Duas LINHAS EM BRANCO entre cada seção principal para garantir a leitura clara em dispositivos móveis. Não use markdown de negrito (**).
+    **PROIBIDO:** Não gere NENHUMA tag HTML, CSS, ou formatação de código (como `<font>`, `<div>`, etc.). Gere apenas texto puro.
     """
+
     try:
         chat = client.chat.completions.create(messages=[{"role": "user", "content": prompt}], model="llama-3.3-70b-versatile", temperature=0.3)
         return chat.choices[0].message.content
