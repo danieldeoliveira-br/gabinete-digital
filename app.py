@@ -752,7 +752,6 @@ elif modo == "💡 Banco de Ideias":
                 salvar_ideia(dados)
                 
                 # --- SOLUÇÃO FINAL: TOAST PERSISTENTE ---
-                st.balloons()
                 st.toast("✅ Ideia enviada com sucesso!", icon='🚀')
                 
                 # O RERUN VEM POR ÚLTIMO, MAS O TOAST SOBREVIVE
