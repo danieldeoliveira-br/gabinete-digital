@@ -714,7 +714,9 @@ elif modo == "🔐 Área do Vereador":
 # --- TELA: BANCO DE IDEIAS (PÚBLICA) ---
 elif modo == "💡 Banco de Ideias":
     
-    # Remove lógica de estado desnecessária
+    # NOVO: Inicializa a flag de sucesso
+    if 'sucesso_ideia' not in st.session_state:
+        st.session_state['sucesso_ideia'] = False
 
     def voltar_inicio():
         st.session_state.navegacao = "🏠 Início"
@@ -723,7 +725,14 @@ elif modo == "💡 Banco de Ideias":
     st.title("Banco de Ideias - Espumoso/RS")
     st.info("Bem-vindo(a)! Envie suas sugestões construtivas para a cidade.")
     
-    with st.form("form_ideia_completo", clear_on_submit=False): # clear_on_submit=False para não perder dados, e para não limpar no sucesso
+    # --- EXIBIÇÃO PERSISTENTE DA MENSAGEM (Fora do Form) ---
+    if st.session_state['sucesso_ideia']:
+        # Mensagem é exibida aqui, garantindo visibilidade, sem a animação problemática
+        st.success("✅ Sua ideia foi enviada com sucesso! O formulário foi limpo.")
+        st.session_state['sucesso_ideia'] = False # Limpa a flag
+    # ---------------------------------------------------
+
+    with st.form("form_ideia_completo", clear_on_submit=False): 
         st.subheader("1. Sobre Você")
         nome = st.text_input("Seu nome completo:", help="Precisamos dos seus dados apenas para que o Vereador possa, se necessário, entrar em contato para entender melhor a sua ideia. Seus dados estarão protegidos.")
         contato = st.text_input("Seu número de celular:")
@@ -751,9 +760,9 @@ elif modo == "💡 Banco de Ideias":
                 }
                 salvar_ideia(dados)
                 
-                # A Confirmação Visual agora está aqui e SEM RERUN DESTRUTIVO
-                st.balloons()
-                st.success("✅ Sua ideia foi enviada com sucesso! Os campos devem ser limpos manualmente para um novo envio.")
+                # ATIVA A FLAG E FORÇA O REINÍCIO DO SCRIPT PARA LIMPAR O FORMULÁRIO
+                st.session_state['sucesso_ideia'] = True
+                st.rerun() 
                 
             else:
                 st.error("Preencha os campos obrigatórios e aceite os termos.")
@@ -763,8 +772,31 @@ elif modo == "💡 Banco de Ideias":
     senha = st.text_input("Senha ADM (Somente números):", type="password")
     if senha == "12345":
         st.success("🔓 Acesso Liberado!")
+        
+        # O arquivo onde as ideias são salvas
+        arquivo_ideias = "ideias.csv" 
+        
         if os.path.exists(arquivo_ideias):
             df = pd.read_csv(arquivo_ideias)
+            
+            # 1. EXIBIÇÃO DA TABELA
             st.dataframe(df, use_container_width=True)
+            
+            # 2. BOTÃO DE DOWNLOAD
             csv = df.to_csv(index=False).encode('utf-8')
             st.download_button("📥 Baixar Relatório", data=csv, file_name="ideias.csv", mime="text/csv")
+            
+            st.markdown("---")
+            st.warning("⚠️ **ATENÇÃO:** Esta ação apagará permanentemente todos os dados do Banco de Ideias (o arquivo CSV) do servidor.")
+            
+            # 3. NOVO BLOCO: BOTÃO DE EXCLUSÃO
+            if st.button("🗑️ APAGAR TODOS OS DADOS DO BANCO DE IDEIAS", type="primary"):
+                try:
+                    os.remove(arquivo_ideias)
+                    st.error("Dados de ideias apagados com sucesso! O formulário está vazio.")
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Erro ao apagar o arquivo: {e}")
+                    
+        else:
+            st.info("Nenhuma ideia encontrada no servidor para download ou exclusão.")
