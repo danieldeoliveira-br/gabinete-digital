@@ -549,22 +549,23 @@ elif modo == "🔐 Área do Vereador":
             st.header("Elaboração de Documentos")
             autor_sessao = st.session_state["vereador_logado"]
             
-            # --- NOVA LÓGICA DE PERMISSÃO ---
+            # --- LÓGICA DE PERMISSÃO DO JURÍDICO (NOVA) ---
+            # 1. Verifica se o usuário logado está na lista de Jurídicos
             is_juridico = autor_sessao in LISTA_JURIDICO
             
-            # Define qual lista e estado de seleção usar
+            # 2. Define o comportamento do selectbox
             if is_juridico:
                 st.info(f"Usuário logado: **{autor_sessao}**. Selecione o Vereador autor da matéria.")
-                autor_list = LISTA_VEREADORES # Jurídico pode selecionar todos
+                autor_list = LISTA_VEREADORES # Jurídico vê a lista de todos os vereadores
                 autor_disabled = False
             else:
                 st.info(f"Usuário logado: **{autor_sessao}**. Você é o autor da proposição.")
-                autor_list = [autor_sessao] # Vereador só pode selecionar a si mesmo
+                autor_list = [autor_sessao] # Vereador só se vê na lista
                 autor_disabled = True
 
-            # O selectbox agora usa as variáveis definidas acima
+            # O selectbox agora é dinâmico, baseado na permissão
             autor_selecionado = st.selectbox("Autor da Proposição:", autor_list, disabled=autor_disabled)
-            # --- FIM DA NOVA LÓGICA ---
+            # --- FIM DA LÓGICA DE PERMISSÃO ---
 
             tipo_doc = st.selectbox("Tipo:", ["Pedido de Providência", "Pedido de Informação", "Indicação", "Projeto de Lei", "Moção de Aplauso", "Moção de Pesar"])
             
@@ -576,7 +577,8 @@ elif modo == "🔐 Área do Vereador":
             if st.button("📝 Elaborar Proposição"):
                 if texto_input:
                     with st.spinner('Redigindo documento com rigor técnico...'):
-                        texto_final = gerar_documento_ia(autor_selecionado, tipo_doc, texto_input)
+                        # CRÍTICO: A função usa o autor_SELECIONADO, não o autor_sessao (o logado)
+                        texto_final = gerar_documento_ia(autor_selecionado, tipo_doc, texto_input) 
                         
                         prop_id_novo = datetime.now().strftime("PROP_%Y%m%d%H%M%S")
                         st.session_state['prop_id'] = prop_id_novo
@@ -586,7 +588,7 @@ elif modo == "🔐 Área do Vereador":
                         st.session_state['tipo_doc_atual'] = tipo_doc
                         
                         salvar_historico(
-                            autor_selecionado, # CRÍTICO: SALVA O AUTOR SELECIONADO, não o logado
+                            autor_selecionado, # CRÍTICO: Salva o autor SELECIONADO (o Vereador)
                             tipo_doc, 
                             texto_input, 
                             texto_final, 
