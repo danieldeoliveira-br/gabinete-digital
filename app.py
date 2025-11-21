@@ -14,7 +14,7 @@ try:
 except:
     api_key = ""
 
-# --- LISTA DE VEREADORES ---
+# --- LISTA DE VEREADORES E PARTIDO ---
 LISTA_VEREADORES = [
     "Vereadora Dayana Soares de Camargo (PDT)",
     "Vereador Denner Fernando Duarte Senhor (PL)",
