@@ -438,11 +438,36 @@ elif modo == "💡 Banco de Ideias":
 
     st.divider()
     st.subheader("🔐 Área Administrativa")
-    senha = st.text_input("Senha ADM:", type="password")
-    if senha == "admin123":
-        st.success("Acesso Liberado!")
+    
+    # Inicializa o estado de login do admin
+    if "admin_logado" not in st.session_state:
+        st.session_state["admin_logado"] = False
+
+    # --- Se NÃO estiver logado, mostra o FORMULÁRIO DE LOGIN ---
+    if not st.session_state["admin_logado"]:
+        with st.form("admin_login_form"):
+            senha = st.text_input("Senha ADM:", type="password")
+            enviou = st.form_submit_button("Entrar") # O NOVO BOTÃO
+
+        if enviou:
+            if senha == "admin123":
+                st.session_state["admin_logado"] = True
+                st.rerun()
+            else:
+                st.error("Senha incorreta.")
+    
+    # --- Se JÁ estiver logado, mostra os dados ---
+    else:
+        st.success("🔓 Acesso Liberado!")
+        
+        if st.button("Sair do Painel ADM"):
+            st.session_state["admin_logado"] = False
+            st.rerun()
+
         if os.path.exists(arquivo_ideias):
             df = pd.read_csv(arquivo_ideias)
             st.dataframe(df, use_container_width=True)
             csv = df.to_csv(index=False).encode('utf-8')
             st.download_button("📥 Baixar Relatório", data=csv, file_name="ideias.csv", mime="text/csv")
+        else:
+            st.info("Nenhuma ideia registrada ainda.")
