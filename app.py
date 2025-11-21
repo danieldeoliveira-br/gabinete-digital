@@ -9,9 +9,10 @@ st.set_page_config(page_title="Legislativo Digital", page_icon="🏛️", layout
 
 # --- CONFIGURAÇÃO DA IA ---
 try:
+    # Tenta obter a chave da API dos secrets do Streamlit
     api_key = st.secrets["GROQ_API_KEY"]
 except:
-    api_key = ""
+    api_key = "" # Deixa vazio se não encontrar
 
 # --- LISTA DE VEREADORES ---
 LISTA_VEREADORES = [
@@ -26,8 +27,99 @@ LISTA_VEREADORES = [
     "Vereador Tomas Fiuza (PROGRESSISTAS)"
 ]
 
-# --- FUNÇÃO: REDATOR IA ---
+# --- ARQUIVOS DE DADOS GLOBAIS ---
+arquivo_ideias = "banco_de_ideias.csv"
+arquivo_mural = "mural_posts.csv"
+arquivo_historico = "historico_proposicoes.csv" # NOVO ARQUIVO DE HISTÓRICO
+
+# --- FUNÇÕES DE BANCO DE DADOS E SALVAMENTO ---
+
+def salvar_historico(autor, tipo, assunto, texto_minuta, versao_id, revisao_num):
+    """Salva a versão atual da minuta no histórico em CSV."""
+    if not os.path.exists(arquivo_historico):
+        df = pd.DataFrame(columns=["ID_PROPOSICAO", "VEREADOR", "TIPO_DOC", "ASSUNTO", "VERSAO_NUM", "DATA_HORA", "MINUTA_TEXTO"])
+    else:
+        df = pd.read_csv(arquivo_historico)
+    
+    nova_linha = pd.DataFrame([{
+        "ID_PROPOSICAO": versao_id, 
+        "VEREADOR": autor, 
+        "TIPO_DOC": tipo, 
+        "ASSUNTO": assunto, 
+        "VERSAO_NUM": revisao_num,
+        "DATA_HORA": datetime.now().strftime("%d/%m/%Y %H:%M:%S"), 
+        "MINUTA_TEXTO": texto_minuta
+    }])
+    df = pd.concat([df, nova_linha], ignore_index=True)
+    df.to_csv(arquivo_historico, index=False)
+
+def salvar_ideia(dados):
+    """Salva uma nova ideia no Banco de Ideias."""
+    if not os.path.exists(arquivo_ideias):
+        df = pd.DataFrame(columns=["Data", "Nome", "Contato", "Ideia", "Contribuição", "Localização", "Áreas", "Idade", "Vereador Destino", "Concordou Termos"])
+    else:
+        df = pd.read_csv(arquivo_ideias)
+    nova_linha = pd.DataFrame([dados])
+    df = pd.concat([df, nova_linha], ignore_index=True)
+    df.to_csv(arquivo_ideias, index=False)
+
+def salvar_post_mural(dados):
+    """Salva uma nova postagem no Mural de Notícias."""
+    if not os.path.exists(arquivo_mural):
+        df = pd.DataFrame(columns=["Data", "Vereador", "Titulo", "Mensagem"])
+    else:
+        df = pd.read_csv(arquivo_mural)
+    nova_linha = pd.DataFrame([dados])
+    df = pd.concat([df, nova_linha], ignore_index=True)
+    df.to_csv(arquivo_mural, index=False)
+
+def obter_avatar_simples(nome):
+    """Retorna um emoji de avatar baseado no nome do vereador."""
+    if nome.startswith("Vereadora"):
+        return "👩"
+    else:
+        return "👨"
+
+# --- FUNÇÃO: REVISOR IA (Para revisões e novas versões) ---
+def gerar_revisao_ia(texto_base, pedido_revisao, autor, tipo_doc):
+    """Gera uma nova versão da minuta com base no pedido de revisão."""
+    if not api_key:
+        return "⚠️ ERRO: A chave da API não foi encontrada nos Secrets!"
+    
+    client = Groq(api_key=api_key)
+    
+    prompt = f"""
+    Você é um Procurador Jurídico Sênior com foco em revisão textual e técnica legislativa.
+    Sua tarefa é REVISAR e MELHORAR a minuta legislativa fornecida.
+    
+    Vereador: {autor}
+    Tipo de Documento: {tipo_doc}
+    Instrução de Revisão: {pedido_revisao}
+    
+    ---
+    TEXTO ATUAL DA MINUTA:
+    {texto_base}
+    ---
+    
+    Com base no texto acima e na instrução de revisão, gere a NOVA VERSÃO da minuta. Mantenha a ESTRUTURA FORMAL e TODAS AS SEÇÕES DO DOCUMENTO.
+    Garanta a correção gramatical e ortográfica em Português.
+    Adicione um mínimo de TRÊS LINHAS EM BRANCO entre cada seção principal para garantir a leitura clara em dispositivos móveis.
+    """
+    
+    try:
+        chat_completion = client.chat.completions.create(
+            messages=[{"role": "user", "content": prompt}],
+            model="llama-3.3-70b-versatile",
+            temperature=0.3
+        )
+        return chat_completion.choices[0].message.content
+    except Exception as e:
+        return f"Ops, deu erro na IA: {e}"
+
+
+# --- FUNÇÃO: REDATOR IA (Para a primeira geração) ---
 def gerar_documento_ia(autor, tipo_doc, assunto):
+    """Gera a primeira minuta do documento com base nas regras de técnica legislativa."""
     if not api_key:
         return "⚠️ ERRO: A chave da API não foi encontrada nos Secrets!"
     
@@ -76,7 +168,7 @@ def gerar_documento_ia(autor, tipo_doc, assunto):
        Foque na relevância social, jurídica e no interesse público.
     
     6. FECHAMENTO:
-       "Plenário Agostinho Somavilla, [Data de Hoje]."
+       "Plenário Agostinho Somavilla, {datetime.now().strftime('%d de %B de %Y').replace('January', 'Janeiro').replace('February', 'Fevereiro').replace('March', 'Março').replace('April', 'Abril').replace('May', 'Maio').replace('June', 'Junho').replace('July', 'Julho').replace('August', 'Agosto').replace('September', 'Setembro').replace('October', 'Outubro').replace('November', 'Novembro').replace('December', 'Dezembro')}."
        (Espaço para assinatura)
        {autor}
        Vereador(a)
@@ -89,87 +181,6 @@ def gerar_documento_ia(autor, tipo_doc, assunto):
             messages=[{"role": "user", "content": prompt}],
             model="llama-3.3-70b-versatile",
             temperature=0.2
-        )
-        return chat_completion.choices[0].message.content
-    except Exception as e:
-        return f"Ops, deu erro na IA: {e}"
-
-# --- FUNÇÕES DE BANCO DE DADOS E SALVAMENTO ---
-arquivo_ideias = "banco_de_ideias.csv"
-arquivo_mural = "mural_posts.csv"
-arquivo_historico = "historico_proposicoes.csv"
-
-def salvar_historico(autor, tipo, assunto, texto_minuta, versao_id, revisao_num):
-    if not os.path.exists(arquivo_historico):
-        df = pd.DataFrame(columns=["ID_PROPOSICAO", "VEREADOR", "TIPO_DOC", "ASSUNTO", "VERSAO_NUM", "DATA_HORA", "MINUTA_TEXTO"])
-    else:
-        df = pd.read_csv(arquivo_historico)
-    
-    nova_linha = pd.DataFrame([{
-        "ID_PROPOSICAO": versao_id, 
-        "VEREADOR": autor, 
-        "TIPO_DOC": tipo, 
-        "ASSUNTO": assunto, 
-        "VERSAO_NUM": revisao_num,
-        "DATA_HORA": datetime.now().strftime("%d/%m/%Y %H:%M:%S"), 
-        "MINUTA_TEXTO": texto_minuta
-    }])
-    df = pd.concat([df, nova_linha], ignore_index=True)
-    df.to_csv(arquivo_historico, index=False)
-
-def salvar_ideia(dados):
-    if not os.path.exists(arquivo_ideias):
-        df = pd.DataFrame(columns=["Data", "Nome", "Contato", "Ideia", "Contribuição", "Localização", "Áreas", "Idade", "Vereador Destino", "Concordou Termos"])
-    else:
-        df = pd.read_csv(arquivo_ideias)
-    nova_linha = pd.DataFrame([dados])
-    df = pd.concat([df, nova_linha], ignore_index=True)
-    df.to_csv(arquivo_ideias, index=False)
-
-def salvar_post_mural(dados):
-    if not os.path.exists(arquivo_mural):
-        df = pd.DataFrame(columns=["Data", "Vereador", "Titulo", "Mensagem"])
-    else:
-        df = pd.read_csv(arquivo_mural)
-    nova_linha = pd.DataFrame([dados])
-    df = pd.concat([df, nova_linha], ignore_index=True)
-    df.to_csv(arquivo_mural, index=False)
-
-def obter_avatar_simples(nome):
-    if nome.startswith("Vereadora"):
-        return "👩"
-    else:
-        return "👨"
-
-def gerar_revisao_ia(texto_base, pedido_revisao, autor, tipo_doc):
-    if not api_key:
-        return "⚠️ ERRO: A chave da API não foi encontrada nos Secrets!"
-    
-    client = Groq(api_key=api_key)
-    
-    prompt = f"""
-    Você é um Procurador Jurídico Sênior com foco em revisão textual e técnica legislativa.
-    Sua tarefa é REVISAR e MELHORAR a minuta legislativa fornecida.
-    
-    Vereador: {autor}
-    Tipo de Documento: {tipo_doc}
-    Instrução de Revisão: {pedido_revisao}
-    
-    ---
-    TEXTO ATUAL DA MINUTA:
-    {texto_base}
-    ---
-    
-    Com base no texto acima e na instrução de revisão, gere a NOVA VERSÃO da minuta. Mantenha a ESTRUTURA FORMAL e TODAS AS SEÇÕES DO DOCUMENTO.
-    Garanta a correção gramatical e ortográfica em Português.
-    Adicione um mínimo de TRÊS LINHAS EM BRANCO entre cada seção principal para garantir a leitura clara em dispositivos móveis.
-    """
-    
-    try:
-        chat_completion = client.chat.completions.create(
-            messages=[{"role": "user", "content": prompt}],
-            model="llama-3.3-70b-versatile",
-            temperature=0.3
         )
         return chat_completion.choices[0].message.content
     except Exception as e:
@@ -318,12 +329,69 @@ elif modo == "👤 Gabinete Virtual":
         else:
             st.info("Mural ainda não foi iniciado.")
 
+# --- TELA: BANCO DE IDEIAS ---
+elif modo == "💡 Banco de Ideias":
+    def voltar_inicio():
+        st.session_state.navegacao = "🏠 Início"
+    st.button("⬅️ Voltar para o Início", on_click=voltar_inicio, key="voltar_ideias")
+    
+    st.header("💡 Banco de Ideias e Sugestões Comunitárias")
+    st.info("Utilize este canal para enviar sua sugestão. Todas as propostas são encaminhadas aos vereadores para análise e possível conversão em proposições legislativas.")
+
+    with st.form("form_ideias"):
+        st.subheader("Seus Dados")
+        nome = st.text_input("Seu Nome Completo (Opcional):")
+        contato = st.text_input("Seu Contato (Email ou Telefone/WhatsApp - Opcional):")
+        
+        st.subheader("Sua Ideia")
+        ideia = st.text_area("Descreva sua sugestão/ideia (Obrigatório):", height=150)
+        contribuicao = st.text_area("Por que sua ideia é importante para Espumoso?", height=100)
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            localizacao = st.text_input("Qual bairro/área é afetada?")
+        with col2:
+            areas = st.multiselect("Áreas relacionadas (Opcional):", ["Saúde", "Educação", "Infraestrutura", "Meio Ambiente", "Segurança", "Outro"])
+
+        vereador_destino = st.selectbox("Deseja direcionar a sugestão a um vereador específico? (Opcional):", ["Nenhum"] + LISTA_VEREADORES)
+
+        st.markdown("---")
+        concordou_termos = st.checkbox("Li e concordo que minha ideia será pública e poderá ser utilizada como base para projetos de lei.", value=True)
+
+        if st.form_submit_button("Enviar Ideia 🚀"):
+            if ideia and concordou_termos:
+                dados = {
+                    "Data": datetime.now().strftime("%d/%m/%Y"),
+                    "Nome": nome,
+                    "Contato": contato,
+                    "Ideia": ideia,
+                    "Contribuição": contribuicao,
+                    "Localização": localizacao,
+                    "Áreas": ", ".join(areas),
+                    "Vereador Destino": vereador_destino,
+                    "Concordou Termos": concordou_termos
+                }
+                salvar_ideia(dados)
+                st.success("Sua ideia foi enviada com sucesso ao Banco de Ideias! Agradecemos sua participação.")
+            else:
+                st.error("Por favor, descreva sua ideia e confirme que concorda com os termos.")
+
+    st.divider()
+    st.subheader("Banco de Ideias (Transparência)")
+    
+    if os.path.exists(arquivo_ideias):
+        df_ideias = pd.read_csv(arquivo_ideias)
+        st.dataframe(df_ideias, use_container_width=True)
+    else:
+        st.info("Nenhuma ideia registrada ainda.")
+
 # --- TELA: ÁREA DO VEREADOR (RESTRITA) ---
 elif modo == "🔐 Área do Vereador":
     def voltar_inicio():
         st.session_state.navegacao = "🏠 Início"
     st.button("⬅️ Voltar para o Início", on_click=voltar_inicio, key="voltar_assistente")
 
+    # Inicializa ou mantém o estado de acesso
     if "acesso_vereador" not in st.session_state:
         st.session_state["acesso_vereador"] = False
     if "vereador_logado" not in st.session_state:
@@ -361,6 +429,8 @@ elif modo == "🔐 Área do Vereador":
         
         with aba_ia:
             st.header("Elaboração de Documentos")
+            
+            # --- ÁREA DE CRIAÇÃO ---
             autor_selecionado = st.selectbox("Autor da Proposição:", [autor_sessao], disabled=True)
             tipo_doc = st.selectbox("Tipo:", ["Pedido de Providência", "Pedido de Informação", "Indicação", "Projeto de Lei", "Moção de Aplauso", "Moção de Pesar"])
             
@@ -373,23 +443,114 @@ elif modo == "🔐 Área do Vereador":
                 if texto_input:
                     with st.spinner('Redigindo documento com rigor técnico...'):
                         texto_final = gerar_documento_ia(autor_sessao, tipo_doc, texto_input)
+                        
+                        # --- LÓGICA DE HISTÓRICO - NOVA PROPOSIÇÃO (Versão 1) ---
+                        prop_id_novo = datetime.now().strftime("PROP_%Y%m%d%H%M%S") # ID baseado em tempo
+                        st.session_state['prop_id'] = prop_id_novo
+                        st.session_state['prop_version_num'] = 1
                         st.session_state['minuta_pronta'] = texto_final
+                        st.session_state['assunto_atual'] = texto_input # Salva o assunto original
+                        st.session_state['tipo_doc_atual'] = tipo_doc # Salva o tipo de documento
+                        
+                        # Salva a Versão 1 no histórico
+                        salvar_historico(
+                            autor_sessao, 
+                            tipo_doc, 
+                            texto_input, 
+                            texto_final, 
+                            prop_id_novo, 
+                            1
+                        )
+                        st.rerun() # Rerun para exibir a minuta gerada
             
             # 2. SAÍDA (Onde a Minuta é Gerada)
             if 'minuta_pronta' in st.session_state:
                 
-                # --- AVISO LEGAL DE RESPONSABILIDADE RESTAURADO ---
+                # --- 1. AVISO LEGAL CRÍTICO ---
                 st.error("🚨 AVISO LEGAL: Este texto é uma sugestão preliminar gerada por Inteligência Artificial (IA). Não possui validade jurídica. A responsabilidade pela análise, correção, adequação formal e constitucionalidade final é integralmente do Vereador(a) autor e de sua assessoria.")
                 
+                # 2. MINUTA ATUAL
                 st.subheader("Minuta Gerada:")
-                
+
+                current_version = st.session_state['prop_version_num']
+                st.caption(f"Versão Atual: **V{current_version}** (Proposição ID: {st.session_state['prop_id']})")
+
                 minuta_para_copia = st.session_state['minuta_pronta']
                 st.text_area("Texto Final da Minuta:", value=minuta_para_copia, height=500, label_visibility="collapsed")
                 
-                # Instrução de cópia visível
+                # 3. INSTRUÇÃO E BOTÕES DE AÇÃO
                 st.info("💡 Para copiar o texto integral, selecione todo o conteúdo no campo acima (Ctrl+A no PC / Pressione e segure no celular).")
                 
-                # Botões de Ação Final
+                st.markdown("---")
+
+                # --- 4. ÁREA DE REVISÃO E HISTÓRICO ---
+                st.subheader("🔄 Revisão e Histórico")
+
+                # REVISÃO IA
+                with st.form("form_revisao_ia", clear_on_submit=False):
+                    st.write(f"Peça uma revisão ou melhoria para a **Versão V{current_version}**:")
+                    pedido_revisao = st.text_input("Instrução de Revisão (Ex: 'Aumente a justificativa', 'Mude a ementa', 'Melhore a linguagem'):")
+                    
+                    if st.form_submit_button("🔁 Gerar Nova Versão"):
+                        if pedido_revisao:
+                            with st.spinner('Revisando o documento com IA...'):
+                                
+                                # 1. Chama a IA para revisão
+                                nova_minuta = gerar_revisao_ia(
+                                    st.session_state['minuta_pronta'], 
+                                    pedido_revisao, 
+                                    autor_sessao, 
+                                    st.session_state['tipo_doc_atual']
+                                )
+                                
+                                # 2. Atualiza a versão e ID
+                                nova_versao_num = st.session_state['prop_version_num'] + 1
+                                prop_id_atual = st.session_state['prop_id']
+                                
+                                # 3. Salva a nova versão
+                                salvar_historico(
+                                    autor_sessao, 
+                                    st.session_state['tipo_doc_atual'], 
+                                    st.session_state['assunto_atual'], 
+                                    nova_minuta, 
+                                    prop_id_atual, 
+                                    nova_versao_num
+                                )
+                                
+                                # 4. Atualiza o estado da sessão para exibir a nova minuta
+                                st.session_state['prop_version_num'] = nova_versao_num
+                                st.session_state['minuta_pronta'] = nova_minuta
+                                st.success(f"Nova Versão V{nova_versao_num} gerada com sucesso!")
+                                st.rerun()
+                        else:
+                            st.error("Por favor, insira uma instrução para a revisão.")
+
+                # HISTÓRICO DE VERSÕES (Com botão para carregar versões antigas)
+                st.markdown("---")
+                with st.expander(f"Histórico de Versões para Proposição {st.session_state['prop_id']}"):
+                    if os.path.exists(arquivo_historico):
+                        df_hist = pd.read_csv(arquivo_historico)
+                        
+                        # Filtra apenas o histórico desta proposição e inverte a ordem (mais novo primeiro)
+                        df_prop = df_hist[df_hist["ID_PROPOSICAO"] == st.session_state['prop_id']].sort_values(by="VERSAO_NUM", ascending=False)
+                        
+                        for index, row in df_prop.iterrows():
+                            if row['VERSAO_NUM'] == current_version:
+                                st.markdown(f"**V{row['VERSAO_NUM']} - ATUAL** ({row['DATA_HORA']})")
+                            else:
+                                col1, col2 = st.columns([1, 4])
+                                with col1:
+                                    # Botão para recarregar uma versão antiga
+                                    if st.button(f"↩️ Carregar V{row['VERSAO_NUM']}", key=f"load_{row['ID_PROPOSICAO']}_{row['VERSAO_NUM']}"):
+                                        st.session_state['minuta_pronta'] = row['MINUTA_TEXTO']
+                                        st.session_state['prop_version_num'] = row['VERSAO_NUM']
+                                        st.rerun()
+                                with col2:
+                                    st.write(f"Versão {row['VERSAO_NUM']} de {row['DATA_HORA']}")
+                    else:
+                        st.caption("Nenhum histórico encontrado para esta proposição.")
+
+                # Botão Softcam (Repetido no final da aba para acesso fácil)
                 st.markdown("---")
                 st.link_button(
                     "🌐 Ir para o Softcam", 
@@ -400,6 +561,7 @@ elif modo == "🔐 Área do Vereador":
             else:
                 st.info("Aguardando a elaboração da minuta. Preencha o detalhamento acima.")
         
+        # --- ABA MURAL (Com correção do NameError) ---
         with aba_mural:
             st.header("📢 Publicar no Gabinete Virtual")
             st.write(f"Você está postando como **{autor_sessao}**.")
@@ -428,8 +590,11 @@ elif modo == "🔐 Área do Vereador":
             st.info("Edite na tabela e clique em SALVAR para confirmar.")
             
             if os.path.exists(arquivo_mural):
-                df_mural = pd.read_csv(arquivo_mural)
-                df_vereador = df_mural[df_mural["Vereador"] == autor_sessao].copy()
+                # Carrega o DataFrame COMPLETO para permitir a separação
+                df_full = pd.read_csv(arquivo_mural) 
+                
+                # Filtra apenas as postagens do Vereador logado para edição
+                df_vereador = df_full[df_full["Vereador"] == autor_sessao].copy()
                 
                 if df_vereador.empty:
                     st.info("Você ainda não tem postagens no mural.")
@@ -437,8 +602,13 @@ elif modo == "🔐 Área do Vereador":
                     df_editado = st.data_editor(df_vereador, num_rows="dynamic", use_container_width=True, key="editor_mural")
                     
                     if st.button("💾 Salvar Alterações no Mural"):
-                        df_others = df_full[df_full["Vereador"] != autor_sessao]
+                        # 1. Separa as postagens de OUTROS vereadores
+                        df_others = df_full[df_full["Vereador"] != autor_sessao] # df_full está disponível
+                        
+                        # 2. Concatena os posts de outros com os posts editados
                         df_combined = pd.concat([df_others, df_editado], ignore_index=True)
+                        
+                        # 3. Salva o DataFrame combinado
                         df_combined.to_csv(arquivo_mural, index=False)
                         st.success("Mural atualizado com sucesso!")
                         st.rerun()
