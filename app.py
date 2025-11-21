@@ -377,6 +377,10 @@ elif modo == "🔐 Área do Vereador":
             
             # 2. SAÍDA (Onde a Minuta é Gerada)
             if 'minuta_pronta' in st.session_state:
+                
+                # --- AVISO LEGAL DE RESPONSABILIDADE RESTAURADO ---
+                st.error("🚨 AVISO LEGAL: Este texto é uma sugestão preliminar gerada por Inteligência Artificial (IA). Não possui validade jurídica. A responsabilidade pela análise, correção, adequação formal e constitucionalidade final é integralmente do Vereador(a) autor e de sua assessoria.")
+                
                 st.subheader("Minuta Gerada:")
                 
                 minuta_para_copia = st.session_state['minuta_pronta']
