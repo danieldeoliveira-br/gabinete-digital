@@ -380,32 +380,37 @@ elif modo == "💡 Banco de Ideias":
 
     with st.form("ideia", clear_on_submit=False):
         nome = st.text_input("Nome:")
-        contato = st.text_input("Contato:")
-        idade = st.radio("Idade:", ["Menos de 18", "18-30 anos", "31-45 anos", "46-60 anos", "60+"], horizontal=True)
+        contato = st.text_input("Contato (Celular/Whatsapp):", help='Utilizado caso o vereador queira entrar em contato para entender melhor a sua ideia')
+        idade = st.radio("Sua Faixa Etária:", ["Menos de 18", "18-30 anos", "31-45 anos", "46-60 anos", "60+"], horizontal=True)
+        
         ideia = st.text_area("Descreva sua sugestão:", height=150, help='Dica: Não se preocupe em escrever bonito.')
-        local = st.text_input("Localização:", help='Dica: Bairro, Rua, Próximo a qual local, Número...')
-        area = st.multiselect("Área:", ["Saúde", "Agricultura & Zona Rural", "Meio Ambiente" "Educação & Cultura", "Obras", "Lazer", "Segurança", "Trânsito", "Empregabilidade", "Tecnologia", "Outros"])
-        dest = st.selectbox("Para qual vereador?", ["Escolha um vereador..."] + LISTA_VEREADORES)
+        
+        # --- NOVO CAMPO ADICIONADO AQUI ---
+        contribuicao = st.text_area("Como isso pode contribuir para a comunidade?", height=100, help='Dica: Nos diga por que sua ideia é importante. Por exemplo: "Isso evitaria acidentes com as crianças da escola..." ou "Ajudaria a tirar os jovens da rua..." ou "Melhoraria o transporte da produção..."')
+        # ----------------------------------
 
-        # --- TERMOS DE USO ADICIONADOS AQUI ---
-        st.markdown("---")
-        st.markdown("### Termos de Uso")
-        st.caption("""
-        Ao enviar sua sugestão, você concorda que ela será, primeiramente, analisada.
-        
-        Você confirma que sua proposta é uma sugestão construtiva ou ideia focada na melhoria de Espumoso (competência municipal), conforme descrito no início do formulário, e não uma reclamação, denúncia ou manifestação sobre assuntos gerais.
-        
-        No entanto, o envio não garante a implementação da ideia. As sugestões serão avaliadas de acordo com sua viabilidade, impacto e prioridades do município. Agradecemos sua participação e compromisso com o desenvolvimento da nossa cidade!
-        """)
-        
-        termos = st.checkbox("Li e concordo com os termos acima.")
-        
+        local = st.text_input("Localização:", help='Dica: Bairro, Rua, Próximo a qual local, Número...')
+        area = st.multiselect("Área:", ["Saúde", "Agricultura & Zona Rural", "Meio Ambiente", "Educação & Cultura", "Obras", "Lazer", "Segurança", "Trânsito", "Empregabilidade", "Tecnologia", "Outros"])
+        dest = st.selectbox("Enviar sugestão para qual vereador(a)?", ["Escolha um vereador..."] + LISTA_VEREADORES)
+        termos = st.checkbox("Concordo com os termos.")
         
         if st.form_submit_button("Enviar"):
-            if termos and ideia and dest != "Escolha...":
-                salvar_ideia({"Data": datetime.now().strftime("%d/%m %H:%M"), "Nome": nome, "Contato": contato, "Idade": idade, "Ideia": ideia, "Localização": local, "Áreas": ", ".join(area), "Vereador Destino": dest, "Concordou Termos": "Sim"})
+            if termos and ideia and dest != "Escolha um vereador...":
+                # Adicionei o campo "Contribuição" no dicionário de salvamento
+                salvar_ideia({
+                    "Data": datetime.now().strftime("%d/%m %H:%M"), 
+                    "Nome": nome, 
+                    "Contato": contato, 
+                    "Idade": idade, 
+                    "Ideia": ideia, 
+                    "Contribuição": contribuicao, # <--- AQUI
+                    "Localização": local, 
+                    "Áreas": ", ".join(area), 
+                    "Vereador Destino": dest, 
+                    "Concordou Termos": "Sim"
+                })
                 st.session_state['sucesso_ideia'] = True; st.rerun()
-            else: st.error("Preencha tudo.")
+            else: st.error("Preencha os campos obrigatórios (Ideia e Destino) e aceite os termos.")
 
     st.divider()
     st.subheader("🔐 Área Administrativa")
