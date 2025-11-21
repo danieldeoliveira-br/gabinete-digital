@@ -322,35 +322,33 @@ elif modo == "🔐 Área do Vereador":
         # --- ABA 1: CRIAR DOCUMENTOS ---
         with aba_ia:
             st.header("Elaboração de Documentos")
-            
-            # 1. ENTRADAS
             autor_selecionado = st.selectbox("Autor da Proposição:", LISTA_VEREADORES)
             tipo_doc = st.selectbox("Tipo:", ["Pedido de Providência", "Pedido de Informação", "Indicação", "Projeto de Lei", "Moção de Aplauso", "Moção de Pesar"])
             
             if tipo_doc == "Projeto de Lei":
-                st.warning("⚠️ Atenção: A IA tentará evitar Vício de Iniciativa criando leis 'Autorizativas' quando necessário.")
+                st.warning("⚠️ Atenção: A IA evitará Vício de Iniciativa criando leis 'Autorizativas' quando necessário.")
             
-            texto_input = st.text_area("Detalhamento da solicitação:", height=150)
+            texto_input = st.text_area("Detalhamento:", height=150)
             
-            # Botão de geração
             if st.button("📝 Elaborar Proposição"):
                 if texto_input:
                     with st.spinner('Redigindo documento com rigor técnico...'):
                         texto_final = gerar_documento_ia(autor_selecionado, tipo_doc, texto_input)
-                        st.session_state['minuta_pronta'] = texto_final # Salva o texto na memória
-
-            # 2. SAÍDA (Aparece somente se houver texto gerado)
+                        st.session_state['minuta_pronta'] = texto_final
+            
+            # --- SAÍDA (Aparece somente se houver texto gerado) ---
             if 'minuta_pronta' in st.session_state:
                 st.subheader("Minuta Gerada:")
                 
-                # Exibe a minuta na caixa de texto
-                st.text_area("Texto para Copiar (Use Ctrl+A para selecionar tudo):", value=st.session_state['minuta_pronta'], height=500)
+                # Exibe o texto em st.code para o botão de cópia funcionar no celular
+                st.code(st.session_state['minuta_pronta'], language="markdown")
                 
                 # Botões de Ação Final
                 col_copy, col_softcam = st.columns([1, 1])
                 
                 with col_copy:
-                    st.info("💡 Selecione todo o texto (Ctrl+A) e copie para transferir.")
+                    # Instrução de cópia mais clara
+                    st.info("💡 Clique no ícone de cópia (acima) para transferir o texto.")
                 
                 with col_softcam:
                     # Botão para o Softcam
