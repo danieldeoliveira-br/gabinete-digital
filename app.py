@@ -502,7 +502,7 @@ elif modo == "🔐 Área do Vereador":
                 st.caption(f"Versão Atual: **V{current_version}** (Proposição ID: {st.session_state['prop_id']})")
 
                 minuta_para_copia = st.session_state['minuta_pronta']
-                st.text_area("Texto Final da Minuta:", value=minuta_para_copia, height=500, label_visibility="collapsed")
+                st.text_area("Texto Final da Minuta:", value=minuta_para_copia, height=800, label_visibility="collapsed")
                 
                 # 3. INSTRUÇÃO E BOTÕES DE AÇÃO
                 st.info("💡  Para copiar o texto pelo celular: Toque Longo dentro do campo - Selecionar tudo - Copiar. Depois use o botão Softcam para ir ao sistema e colar seu texto.")
