@@ -271,6 +271,7 @@ elif modo == "🔐 Área do Vereador":
         st.session_state.navegacao = "🏠 Início"
     st.button("⬅️ Voltar para o Início", on_click=voltar_inicio, key="voltar_assistente")
 
+    # Inicializa ou mantém o estado de acesso
     if "acesso_vereador" not in st.session_state:
         st.session_state["acesso_vereador"] = False
     if "vereador_logado" not in st.session_state:
@@ -326,27 +327,21 @@ elif modo == "🔐 Área do Vereador":
             if 'minuta_pronta' in st.session_state:
                 st.subheader("Minuta Gerada:")
                 
-                # Exibe a minuta na caixa de texto
                 minuta_para_copia = st.session_state['minuta_pronta']
-                st.text_area("Texto Final da Minuta:", value=minuta_para_copia, height=500, label_visibility="collapsed") # TEXT AREA DE VOLTA AQUI
                 
-                # Botões de Ação Final
-                col_copy, col_softcam = st.columns([1, 1])
+                # --- SAÍDA DO TEXTO FLEXÍVEL (Corrige a quebra de linha) ---
+                st.text_area("Texto Final da Minuta:", value=minuta_para_copia, height=500)
                 
-                with col_copy:
-                    # FIX: O BOTÃO DE DOWNLOAD COM O RÓTULO DE COPIA É REMOVIDO
-                    # E SUBSTITUÍDO PELO TEXTO ABAIXO QUE USA O NATIVO ST.CODE
-                    st.code(minuta_para_copia, language="markdown")
+                st.info("💡 Para copiar, selecione todo o texto no campo acima (Ctrl+A no PC / Long Press no celular) e use o botão Softcam.")
                 
-                with col_softcam:
-                    # Botão para o Softcam
-                    st.link_button(
-                        "🌐 Ir para o Softcam", 
-                        "https://www.camaraespumoso.rs.gov.br/softcam/", 
-                        type="primary", 
-                        use_container_width=True
-                    )
-                st.info("💡 Use o ícone de cópia (no canto superior direito do bloco de texto) para transferir a minuta integral. Use o botão do Softcam para ir ao sistema.")
+                # Botão Softcam (O único que importa para o fluxo)
+                st.markdown("---")
+                st.link_button(
+                    "🌐 Ir para o Softcam", 
+                    "https://www.camaraespumoso.rs.gov.br/softcam/", 
+                    type="primary", 
+                    use_container_width=True
+                )
             else:
                 st.info("Aguardando a elaboração da minuta. Preencha o detalhamento acima.")
         
