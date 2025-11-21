@@ -395,7 +395,14 @@ elif modo == "💡 Banco de Ideias":
         local = st.text_input("Localização:", help='Dica: Bairro, Rua, Próximo a qual local, Número...')
         area = st.multiselect("Área:", ["Saúde", "Agricultura & Zona Rural", "Meio Ambiente", "Educação & Cultura", "Obras", "Lazer", "Segurança", "Trânsito", "Empregabilidade", "Tecnologia", "Outros"])
         dest = st.selectbox("Enviar sugestão para qual vereador(a)?", ["Escolha um vereador..."] + LISTA_VEREADORES)
-        termos = st.checkbox("Concordo com os termos.")
+
+        st.markdown("### Termos de Uso")
+        st.caption("""
+        Ao enviar sua sugestão, você concorda que ela será, primeiramente, analisada.
+        Você confirma que sua proposta é uma sugestão construtiva ou ideia focada na melhoria de Espumoso (competência municipal), e não uma reclamação, denúncia ou manifestação sobre assuntos gerais.
+        No entanto, o envio não garante a implementação da ideia. As sugestões serão avaliadas de acordo com sua viabilidade, impacto e prioridades do município. Agradecemos sua participação!
+        """)
+        termos = st.checkbox("Li e concordo com os termos acima.")
         
         if st.form_submit_button("Enviar"):
             if termos and ideia and dest != "Escolha um vereador...":
