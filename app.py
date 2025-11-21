@@ -720,6 +720,10 @@ elif modo == "💡 Banco de Ideias":
     st.title("Banco de Ideias - Espumoso/RS")
     st.info("Bem-vindo(a)! Envie suas sugestões construtivas para a cidade.")
     
+    # Inicializa a variável de estado para mostrar o sucesso
+    if 'ideia_enviada' not in st.session_state:
+        st.session_state['ideia_enviada'] = False
+
     with st.form("form_ideia_completo", clear_on_submit=True):
         st.subheader("1. Sobre Você")
         nome = st.text_input("Seu nome completo:", help="Precisamos dos seus dados apenas para que o Vereador possa, se necessário, entrar em contato para entender melhor a sua ideia. Seus dados estarão protegidos.")
@@ -748,11 +752,18 @@ elif modo == "💡 Banco de Ideias":
                 }
                 salvar_ideia(dados)
                 
-                st.balloons()
-                st.success("Enviado com sucesso! Recarregue a página para um novo envio.") # Mensagem agora persistente
-                
+                # SÓ ATIVAMOS A FLAG E RECARREGAMOS
+                st.session_state['ideia_enviada'] = True
+                st.rerun() 
             else:
                 st.error("Preencha os campos obrigatórios e aceite os termos.")
+
+    # --- NOVO BLOCO: EXIBIÇÃO PERSISTENTE DA MENSAGEM ---
+    if st.session_state['ideia_enviada']:
+        st.balloons()
+        st.success("Sua ideia foi enviada com sucesso! Agradecemos sua participação.")
+        # Opcional: Desliga a flag para o próximo uso
+        st.session_state['ideia_enviada'] = False 
 
     st.divider()
     st.subheader("🔐 Área Administrativa")
