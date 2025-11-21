@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
 import os
+import streamlit.components.v1 as components
+import json
 from datetime import datetime
 from groq import Groq
 
@@ -186,6 +188,68 @@ def gerar_documento_ia(autor, tipo_doc, assunto):
     except Exception as e:
         return f"Ops, deu erro na IA: {e}"
 
+def botao_copiar_para_clipboard(texto, label="📋 Copiar texto", height=70):
+    """
+    Insere botão que copia 'texto' para a área de transferência no navegador.
+    """
+    # Usa json.dumps para escapar corretamente aspas e quebras de linha complexas.
+    safe_text = json.dumps(texto)
+    
+    html = f"""
+    <div style='display: flex; align-items: center;'>
+      <button id="st_copy_btn" style="
+          background-color:#128C7E;
+          color:white;
+          border:none;
+          padding:8px 12px;
+          border-radius:6px;
+          font-size:14px;
+          cursor:pointer;
+          margin-right: 10px;
+      ">{label}</button>
+      <span id="st_copy_msg" style="font-family: sans-serif; color: white;"></span>
+    </div>
+
+    <script>
+    const btn = document.getElementById("st_copy_btn");
+    const msg = document.getElementById("st_copy_msg");
+    const text = {safe_text};
+
+    async function copiarParaClipboard(t) {{
+      // Try modern API first
+      try {{
+        await navigator.clipboard.writeText(t);
+        return true;
+      }} catch(e) {{
+        // Fallback (older browsers/restrictions)
+        try {{
+          const ta = document.createElement("textarea");
+          ta.value = t;
+          document.body.appendChild(ta);
+          ta.select();
+          const ok = document.execCommand('copy');
+          document.body.removeChild(ta);
+          return ok;
+        }} catch(err) {{
+          return false;
+        }}
+      }}
+    }}
+
+    btn.addEventListener("click", async () => {{
+      const ok = await copiarParaClipboard(text);
+      if (ok) {{
+        msg.innerText = "Copiado!";
+        setTimeout(()=> msg.innerText = "", 2000);
+        btn.innerText = "✔ Copiado";
+        setTimeout(()=> btn.innerText = "{label}", 1500);
+      }} else {{
+        msg.innerText = "Falha ao copiar. Selecione e copie manualmente.";
+      }}
+    }});
+    </script>
+    """
+    components.html(html, height=height, scrolling=False)
 
 # --- MENU LATERAL ---
 if os.path.exists("brasao.png"):
@@ -520,7 +584,25 @@ elif modo == "🔐 Área do Vereador":
 
                 minuta_para_copia = st.session_state['minuta_pronta']
                 st.text_area("Texto Final da Minuta:", value=minuta_para_copia, height=800, label_visibility="collapsed")
-                
+            
+            # --- BOTÕES DE AÇÃO FINAL (Usando a nova função JS) ---
+        col_copy, col_softcam = st.columns([1, 1])
+        
+        with col_copy:
+            # CHAMADA DA NOVA FUNÇÃO DE COPIA JS
+            botao_copiar_para_clipboard(
+                st.session_state['minuta_pronta'], 
+                label="📋 COPIAR MINUTA"
+            )
+
+        with col_softcam:
+            st.link_button(
+                "🌐 Ir para o Softcam", 
+                "https://www.camaraespumoso.rs.gov.br/softcam/", 
+                type="primary", 
+                use_container_width=True
+            )    
+            
                 # 3. INSTRUÇÃO E BOTÕES DE AÇÃO
                 st.info("💡  Para copiar o texto pelo celular: Toque Longo dentro do campo - Selecionar tudo - Copiar. Depois use o botão Softcam para ir ao sistema e colar seu texto.")
                 
