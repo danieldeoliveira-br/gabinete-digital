@@ -523,7 +523,7 @@ elif modo == "🔐 Área do Vereador":
 
         if st.button("Entrar"):
             # Verifica se o usuário foi selecionado
-            if usuario_identificado != "Selecione seu nome..." and senha_digitada == "camara2025":
+            if usuario_identificado != "Selecione seu nome..." and senha_digitada == "1955":
                 st.session_state["acesso_vereador"] = True
                 # CRÍTICO: Armazena o usuário logado, que pode ser Jurídico ou Vereador
                 st.session_state["vereador_logado"] = usuario_identificado 
