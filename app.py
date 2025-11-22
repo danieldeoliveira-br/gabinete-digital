@@ -433,7 +433,7 @@ elif modo == "💡 Banco de Ideias":
         st.success("✅ Enviado com sucesso!"); st.session_state['sucesso_ideia'] = False
 
     with st.form("ideia", clear_on_submit=False):
-        nome = st.text_input("Nome:", , max_chars=100)
+        nome = st.text_input("Nome:", max_chars=100)
         contato = st.text_input("Contato (Celular/Whatsapp):", help='Utilizado caso o vereador queira entrar em contato para entender melhor a sua ideia')
         idade = st.radio("Sua Faixa Etária (Idade):", ["Menos de 18 anos", "18-30 anos", "31-45 anos", "46-60 anos", "60+"], horizontal=True)
         
