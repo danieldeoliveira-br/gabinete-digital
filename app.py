@@ -333,10 +333,12 @@ elif modo == "🔐 Área do Vereador":
                 
                 st.link_button("🌐 Ir para Softcam", "https://www.camaraespumoso.rs.gov.br/softcam/", type="primary", use_container_width=True)
                 
+                # --- ÁREA DE REVISÃO E HISTÓRICO ---
+                
                 st.markdown("---")
-                st.subheader("🔄 Revisão")
+                st.subheader("🔄 Revisão e Histórico")
                 with st.form("revisao"):
-                    msg_rev = st.text_input("O que melhorar?")
+                    msg_rev = st.text_input("O que melhorar? Peça uma revisão ou melhoria. Ex: 'Aumente a justificativa', 'Mude a ementa', 'Melhore a linguagem' ")
                     if st.form_submit_button("🔁 Revisar"):
                         nova_minuta = gerar_revisao_ia(st.session_state['minuta_pronta'], msg_rev, autor_selecionado, st.session_state['tipo_atual'])
                         st.session_state['prop_ver'] += 1
