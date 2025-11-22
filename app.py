@@ -433,17 +433,17 @@ elif modo == "💡 Banco de Ideias":
         st.success("✅ Enviado com sucesso!"); st.session_state['sucesso_ideia'] = False
 
     with st.form("ideia", clear_on_submit=False):
-        nome = st.text_input("Nome:")
+        nome = st.text_input("Nome:", , max_chars=100)
         contato = st.text_input("Contato (Celular/Whatsapp):", help='Utilizado caso o vereador queira entrar em contato para entender melhor a sua ideia')
         idade = st.radio("Sua Faixa Etária (Idade):", ["Menos de 18 anos", "18-30 anos", "31-45 anos", "46-60 anos", "60+"], horizontal=True)
         
-        ideia = st.text_area("Descreva sua sugestão:", height=150, help='Dica: Não se preocupe em escrever bonito. Apenas nos diga o que você gostaria que fosse feito. Por exemplo: "Eu sugiro colocar um quebra-molas na Rua X..." ou "Gostaria de um projeto de aulas de violão para jovens no bairro Y..." ou "Poderiam consertar a ponte da localidade Z..."')
+        ideia = st.text_area("Descreva sua sugestão:", height=150, help='Dica: Não se preocupe em escrever bonito. Apenas nos diga o que você gostaria que fosse feito. Por exemplo: "Eu sugiro colocar um quebra-molas na Rua X..." ou "Gostaria de um projeto de aulas de violão para jovens no bairro Y..." ou "Poderiam consertar a ponte da localidade Z..."', max_chars=1000)
         
         # --- NOVO CAMPO ADICIONADO AQUI ---
-        contribuicao = st.text_area("Como isso pode contribuir para a comunidade?", height=100, help='Dica: Nos diga por que sua ideia é importante. Por exemplo: "Isso evitaria acidentes com as crianças da escola..." ou "Ajudaria a tirar os jovens da rua..." ou "Melhoraria o transporte da produção..."')
+        contribuicao = st.text_area("Como isso pode contribuir para a comunidade?", height=100, help='Dica: Nos diga por que sua ideia é importante. Por exemplo: "Isso evitaria acidentes com as crianças da escola..." ou "Ajudaria a tirar os jovens da rua..." ou "Melhoraria o transporte da produção..."', max_chars=1000)
         # ----------------------------------
 
-        local = st.text_input("Localização:", help='Dica: Bairro, Rua, Próximo a qual local, Número...')
+        local = st.text_input("Localização:", help='Dica: Bairro, Rua, Próximo a qual local, Número...', max_chars=100)
         area = st.multiselect("Área:", ["Saúde", "Agricultura & Zona Rural", "Meio Ambiente", "Educação & Cultura", "Obras", "Lazer", "Segurança", "Trânsito", "Empregabilidade", "Tecnologia", "Outros"])
         dest = st.selectbox("Enviar sugestão para qual vereador(a)?", ["Escolha um vereador..."] + LISTA_VEREADORES)
 
