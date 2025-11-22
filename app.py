@@ -464,7 +464,7 @@ elif modo == "💡 Banco de Ideias":
         # ----------------------------------
 
         local = st.text_input("Localização:", help='Dica: Bairro, Rua, Próximo a qual local, Número...', max_chars=100)
-        area = st.multiselect("Em qual área você acha que sua ideia contribuirá:", ["Saúde", "Agricultura", "Zona Rural", "Meio Ambiente", "Assistência Social", "Educação & Cultura", "Obras", "Lazer", "Segurança", "Trânsito", "Empregabilidade", "Tecnologia", "Outros"])
+        area = st.multiselect("Em qual área você acha que sua ideia contribuirá:", ["Saúde", "Agricultura", "Zona Rural", "Meio Ambiente", "Assistência Social", "Educação & Cultura", "Obras", "Lazer", "Segurança", "Trânsito", "Empregabilidade", "Tecnologia", "Outros"], placeholder="Selecione uma ou mais opções")
         dest = st.selectbox("Enviar sugestão para qual vereador(a)?", ["Escolha um vereador..."] + LISTA_VEREADORES)
 
         st.markdown("### Termos de Uso")
