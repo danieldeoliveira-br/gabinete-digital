@@ -305,18 +305,17 @@ elif modo == "🔐 Área do Vereador":
         senha_digitada = st.text_input("Senha:", type="password")
         
         if st.button("Entrar"):
-            if vereador_identificado == "Selecione seu nome..." and senha_digitada == "camara2025":
-                # Login Sucesso
-                st.session_state["acesso_vereador"] = True
-                st.session_state["vereador_logado"] = vereador_identificado 
-                
-                # --- AQUI ESTÁ O ESPIÃO (REGISTRA O LOG) ---
-                registrar_log(vereador_identificado, "Login Realizado")
-                # -------------------------------------------
-                
-                st.rerun()
-            else:
-                st.error("Falha na autenticação. Verifique a senha e se o nome foi selecionado.")
+    # verifica se o usuário selecionou algo diferente de "Selecione..." e se a senha está correta
+    if usuario_identificado != "Selecione..." and senha_digitada == "camara2025":
+        st.session_state["acesso_vereador"] = True
+        st.session_state["vereador_logado"] = usuario_identificado
+
+        # registra o log usando a variável correta
+        registrar_log(usuario_identificado, "Login Realizado")
+
+        st.rerun()
+    else:
+        st.error("Falha na autenticação. Verifique a senha e se o nome foi selecionado.")
     else:
         autor_sessao = st.session_state["vereador_logado"]
         if st.button("Sair", type="secondary"):
