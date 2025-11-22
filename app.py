@@ -313,7 +313,7 @@ elif modo == "🔐 Área do Vereador":
              registrar_log(usuario_identificado, "Login Realizado")
 
              st.rerun()
-        else:
+          else:
              st.error("Falha na autenticação. Verifique a senha e se o nome foi selecionado.")
     else:
         autor_sessao = st.session_state["vereador_logado"]
