@@ -506,7 +506,7 @@ elif modo == "💡 Banco de Ideias":
         with st.form("login_admin_form"):
             senha = st.text_input("Senha ADM (Somente números):", type="password")
             if st.form_submit_button("Acessar"):
-                if senha == "12345":
+                if senha == "280255":
                     st.session_state["admin_logado"] = True
                     st.rerun()
                 else:
