@@ -303,19 +303,18 @@ elif modo == "🔐 Área do Vereador":
         st.header("🔒 Acesso Restrito - Identificação")
         usuario_identificado = st.selectbox("Eu sou:", ["Selecione..."] + LISTA_LOGIN)
         senha_digitada = st.text_input("Senha:", type="password")
-        
+
         if st.button("Entrar"):
-    # verifica se o usuário selecionou algo diferente de "Selecione..." e se a senha está correta
-    if usuario_identificado != "Selecione..." and senha_digitada == "camara2025":
-        st.session_state["acesso_vereador"] = True
-        st.session_state["vereador_logado"] = usuario_identificado
+          if usuario_identificado != "Selecione..." and senha_digitada == "camara2025":
+             st.session_state["acesso_vereador"] = True
+             st.session_state["vereador_logado"] = usuario_identificado
 
-        # registra o log usando a variável correta
-        registrar_log(usuario_identificado, "Login Realizado")
+             # registra o log usando a variável correta
+             registrar_log(usuario_identificado, "Login Realizado")
 
-        st.rerun()
-    else:
-        st.error("Falha na autenticação. Verifique a senha e se o nome foi selecionado.")
+             st.rerun()
+        else:
+             st.error("Falha na autenticação. Verifique a senha e se o nome foi selecionado.")
     else:
         autor_sessao = st.session_state["vereador_logado"]
         if st.button("Sair", type="secondary"):
