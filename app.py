@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import os
+import pytz
 from datetime import datetime
 from groq import Groq
 
@@ -38,6 +39,9 @@ arquivo_mural = "mural_posts.csv"
 arquivo_historico = "historico_proposicoes.csv"
 
 # --- FUNÇÕES ÚTEIS ---
+def obter_data_hora_atual():
+    fuso_br = pytz.timezone('America/Sao_Paulo')
+    return datetime.now(fuso_br).strftime("%d/%m/%Y %H:%M")
 
 def obter_avatar_simples(nome):
     if nome.startswith("Vereadora"):
@@ -367,7 +371,7 @@ elif modo == "🔐 Área do Vereador":
                 titulo = st.text_input("Título")
                 msg = st.text_area("Mensagem")
                 if st.form_submit_button("Publicar no Mural"):
-                    salvar_post_mural({"Data": datetime.now().strftime("%d/%m/%Y"), "Vereador": autor_post, "Titulo": titulo, "Mensagem": msg})
+                    salvar_post_mural({"Data": obter_data_hora_atual(), "Vereador": autor_post, "Titulo": titulo, "Mensagem": msg})
                     st.success("Publicado!"); st.rerun()
             
             st.divider()
@@ -455,7 +459,7 @@ elif modo == "💡 Banco de Ideias":
             if termos and ideia and dest != "Escolha um vereador...":
                 # Adicionei o campo "Contribuição" no dicionário de salvamento
                 salvar_ideia({
-                    "Data": datetime.now().strftime("%d/%m %H:%M"), 
+                    "Data": obter_data_hora_atual(), 
                     "Nome": nome, 
                     "Contato": contato, 
                     "Idade": idade, 
