@@ -514,39 +514,64 @@ elif modo == "💡 Banco de Ideias":
                 else:
                     st.error("Senha incorreta.")
     
-    # TELA LOGADA (Tabela Editável)
+    # TELA LOGADA (Painel com Abas)
     else:
         if st.button("Sair Admin"):
             st.session_state["admin_logado"] = False
             st.rerun()
             
-        if os.path.exists(arquivo_ideias):
-            df = pd.read_csv(arquivo_ideias)
+        # --- AQUI ESTÁ A MUDANÇA: CRIAÇÃO DE ABAS ---
+        aba_ideias, aba_logs = st.tabs(["📋 Gerenciar Ideias", "🕵️ Logs de Acesso"])
+        
+        # --- ABA 1: IDEIAS (O código que você já tinha) ---
+        with aba_ideias:
+            st.subheader("Ideias Recebidas")
+            st.caption("📝 Para apagar uma linha: Selecione-a e aperte DELETE no teclado. Depois clique em SALVAR.")
             
-            st.info("📝 Para apagar uma linha: Selecione-a e aperte DELETE no teclado. Depois clique em SALVAR.")
-            
-            # --- TABELA EDITÁVEL (Igual ao Mural) ---
-            df_editado = st.data_editor(
-                df, 
-                num_rows="dynamic", # ISSO PERMITE ADICIONAR/REMOVER LINHAS
-                key="editor_ideias_admin", 
-                use_container_width=True
-            )
-            
-            c1, c2 = st.columns(2)
-            with c1:
-                if st.button("💾 Salvar Alterações na Tabela", use_container_width=True):
-                    # Salva o que você viu na tela (df_editado) no arquivo
-                    df_editado.to_csv(arquivo_ideias, index=False)
-                    st.success("Tabela atualizada com sucesso!")
-                    st.rerun()
-            with c2:
-                st.download_button(
-                    "📥 Baixar CSV", 
-                    data=df.to_csv(index=False).encode('utf-8'), 
-                    file_name="ideias.csv", 
-                    mime="text/csv", 
+            if os.path.exists(arquivo_ideias):
+                df = pd.read_csv(arquivo_ideias)
+                
+                # Tabela Editável
+                df_editado = st.data_editor(
+                    df, 
+                    num_rows="dynamic", 
+                    key="editor_ideias_admin", 
                     use_container_width=True
                 )
-        else:
-            st.info("Nenhuma ideia registrada ainda.")
+                
+                c1, c2 = st.columns(2)
+                with c1:
+                    if st.button("💾 Salvar Alterações na Tabela", use_container_width=True):
+                        df_editado.to_csv(arquivo_ideias, index=False)
+                        st.success("Tabela atualizada com sucesso!")
+                        st.rerun()
+                with c2:
+                    st.download_button(
+                        "📥 Baixar CSV", 
+                        data=df.to_csv(index=False).encode('utf-8'), 
+                        file_name="ideias.csv", 
+                        mime="text/csv", 
+                        use_container_width=True
+                    )
+            else:
+                st.info("Nenhuma ideia registrada ainda.")
+
+        # --- ABA 2: LOGS DE ACESSO (O código novo) ---
+        with aba_logs:
+            st.subheader("Histórico de Acessos (Vereadores)")
+            st.caption("Registro de quem acessou a área restrita e quando.")
+            
+            if os.path.exists(arquivo_logs):
+                df_logs = pd.read_csv(arquivo_logs)
+                # Mostra o mais recente primeiro (inverte a ordem) e ocupa a largura toda
+                st.dataframe(df_logs.iloc[::-1], use_container_width=True)
+                
+                st.markdown("---")
+                st.download_button(
+                    "📥 Baixar Log de Acessos", 
+                    data=df_logs.to_csv(index=False).encode('utf-8'), 
+                    file_name="logs_acesso.csv", 
+                    mime="text/csv"
+                )
+            else:
+                st.info("Nenhum acesso registrado ainda.")
