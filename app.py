@@ -339,7 +339,7 @@ elif modo == "🔐 Área do Vereador":
                 st.subheader("🔄 Revisão e Histórico")
                 with st.form("revisao"):
                     msg_rev = st.text_input("O que melhorar? Peça uma revisão ou melhoria. Ex: 'Aumente a justificativa', 'Mude a ementa', 'Melhore a linguagem' ")
-                    if st.form_submit_button("🔁 Revisar"):
+                    if st.form_submit_button("🔁 Revisar/Refazer"):
                         nova_minuta = gerar_revisao_ia(st.session_state['minuta_pronta'], msg_rev, autor_selecionado, st.session_state['tipo_atual'])
                         st.session_state['prop_ver'] += 1
                         st.session_state['minuta_pronta'] = nova_minuta
@@ -366,7 +366,7 @@ elif modo == "🔐 Área do Vereador":
                 
                 titulo = st.text_input("Título")
                 msg = st.text_area("Mensagem")
-                if st.form_submit_button("Publicar"):
+                if st.form_submit_button("Publicar no Mural"):
                     salvar_post_mural({"Data": datetime.now().strftime("%d/%m/%Y"), "Vereador": autor_post, "Titulo": titulo, "Mensagem": msg})
                     st.success("Publicado!"); st.rerun()
             
@@ -405,9 +405,10 @@ elif modo == "💡 Banco de Ideias":
     def voltar_inicio(): st.session_state.navegacao = "🏠 Início"
     st.button("⬅️ Voltar", on_click=voltar_inicio)
     st.title("Banco de Ideias - Espumoso/RS"); 
-    st.info("""
+    st.success("""
     **Bem-vindo(a) ao Banco de Ideias da Câmara de Espumoso!**
     Este é o seu canal direto para enviar PROPOSTAS e SUGESTÕES CONSTRUTIVAS focadas em melhorar a nossa cidade.
+    Se tiver dúvidas, clique na interrogação (?) no canto de cada campo.           
     """)
     
     with st.expander("ℹ️ PARA QUE SERVE ESTE FORMULÁRIO (Clique para ler as instruções)"):
@@ -430,7 +431,7 @@ elif modo == "💡 Banco de Ideias":
     with st.form("ideia", clear_on_submit=False):
         nome = st.text_input("Nome:")
         contato = st.text_input("Contato (Celular/Whatsapp):", help='Utilizado caso o vereador queira entrar em contato para entender melhor a sua ideia')
-        idade = st.radio("Sua Faixa Etária:", ["Menos de 18", "18-30 anos", "31-45 anos", "46-60 anos", "60+"], horizontal=True)
+        idade = st.radio("Sua Faixa Etária (Idade):", ["Menos de 18 anos", "18-30 anos", "31-45 anos", "46-60 anos", "60+"], horizontal=True)
         
         ideia = st.text_area("Descreva sua sugestão:", height=150, help='Dica: Não se preocupe em escrever bonito. Apenas nos diga o que você gostaria que fosse feito. Por exemplo: "Eu sugiro colocar um quebra-molas na Rua X..." ou "Gostaria de um projeto de aulas de violão para jovens no bairro Y..." ou "Poderiam consertar a ponte da localidade Z..."')
         
