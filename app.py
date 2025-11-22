@@ -94,14 +94,14 @@ def gerar_revisao_ia(texto_base, pedido_revisao, autor, tipo_doc):
     if not api_key: return "⚠️ ERRO: Chave API não encontrada!"
     client = Groq(api_key=api_key)
     prompt = f"""
-    Você é um Procurador Jurídico Sênior. REVISE a minuta abaixo.
+    Você é um Procurador Jurídico Sênior do Poder Legislativo de Espumoso/RS. REVISE a minuta abaixo.
     Vereador: {autor} | Tipo: {tipo_doc} | Pedido: {pedido_revisao}
     ---
     TEXTO ATUAL:
     {texto_base}
     ---
     Gere a NOVA VERSÃO mantendo a estrutura formal. Correção gramatical impecável.
-    Adicione TRÊS LINHAS EM BRANCO entre seções para leitura.
+    Adicione DUAS LINHAS EM BRANCO entre seções para leitura.
     PROIBIDO USAR HTML.
     """
     try:
@@ -119,10 +119,9 @@ def gerar_documento_ia(autor, tipo_doc, assunto):
         TÉCNICA LEGISLATIVA (OBRIGATÓRIO):
         1. O texto da lei deve vir IMEDIATAMENTE após a Ementa.
         2. Use Artigos (Art. 1º, Art. 2º...), Parágrafos (§ 1º) e Incisos (I, II).
-        3. Linguagem: Formal, Impessoal e Imperativa.
+        3. Linguagem: Formal, Impessoal, Institucional em tom de Poder Legislativo, e Imperativa.
         4. VÍCIO DE INICIATIVA: Se o assunto gerar despesa ou envolver gestão interna da prefeitura, use 'Fica o Poder Executivo AUTORIZADO a instituir...'.
         5. CLÁUSULAS PADRÃO:
-           - Penúltimo Artigo: 'O Poder Executivo regulamentará a presente Lei no que couber.'
            - Último Artigo: 'Esta Lei entra em vigor na data de sua publicação.'
         """
     else:
@@ -149,7 +148,7 @@ def gerar_documento_ia(autor, tipo_doc, assunto):
     Título 'JUSTIFICATIVA' (em negrito). Escreva um texto dissertativo-argumentativo formal defendendo a proposta. Foque na relevância social, jurídica e no interesse público
     6. FECHAMENTO: "Plenário Agostinho Somavilla, [Data]." Assinatura.
     
-    IMPORTANTE: Adicione DUAS LINHAS EM BRANCO entre seções para leitura no celular.
+    IMPORTANTE: Adicione DUAS LINHAS EM BRANCO entre seções para facilitar leitura no celular.
     PROIBIDO: Não gere NENHUMA tag HTML, CSS ou formatação de código. Apenas texto puro.
     """
     try:
@@ -216,7 +215,7 @@ if modo == "🏠 Início":
         with st.container(border=True): 
             st.markdown("## 🔐")
             st.markdown("#### Área do Vereador")
-            st.caption("Acesso à IA para proposições e gestão do Mural.")
+            st.caption("Acesso à Assitente para proposições e gestão do Mural.")
             st.button("Acessar Área Restrita 📝", use_container_width=True, on_click=ir_para_assistente)
     with col_b:
         with st.container(border=True):
@@ -321,7 +320,7 @@ elif modo == "🔐 Área do Vereador":
             st.session_state["acesso_vereador"] = False; st.session_state["vereador_logado"] = None; st.rerun()
 
         st.success(f"Logado como: **{autor_sessao}**")
-        tab1, tab2 = st.tabs(["⚖️ Criar Documentos", "📢 Gerenciar Mural"])
+        tab1, tab2 = st.tabs(["⚖️ Elaborar Proposições", "📢 Gerenciar Mural"])
         
         with tab1:
             st.header("Elaboração de Documentos")
@@ -332,9 +331,9 @@ elif modo == "🔐 Área do Vereador":
             else:
                 autor_selecionado = st.selectbox("Autor:", [autor_sessao], disabled=True)
 
-            tipo_doc = st.selectbox("Tipo:", ["Pedido de Providência", "Pedido de Informação", "Indicação", "Projeto de Lei", "Moção de Aplauso", "Moção de Pesar"])
-            if tipo_doc == "Projeto de Lei": st.warning("⚠️ Cuidado com Vício de Iniciativa.")
-            texto_input = st.text_area("Detalhamento:", height=150)
+            tipo_doc = st.selectbox("Tipo:", ["Pedido de Providência", "Pedido de Informação", "Indicação", "Projeto de Lei", "Moção"])
+            if tipo_doc == "Projeto de Lei": st.warning("⚠️ Cuidado com Vício de Iniciativa: O Assistente tentará elaborar evitando vícios, porém, A responsabilidade pela análise, correção, adequação formal e constitucionalidade final é integralmente do Vereador(a) autor e de sua assessoria.")
+            texto_input = st.text_area("Escreva aqui qual a sua ideia ou qual o problema e como imagina a solução, quanto mais detalhes, melhor:", height=150)
             
             if st.button("📝 Elaborar"):
                 if texto_input:
@@ -436,12 +435,12 @@ elif modo == "💡 Banco de Ideias":
     Se tiver dúvidas, clique na interrogação (?) no canto de cada campo.           
     """)
     
-    with st.expander("ℹ️ PARA QUE SERVE ESTE FORMULÁRIO (Clique para ler as instruções)"):
+    with st.expander("ℹ️ PARA QUE SERVE ESTE FORMULÁRIO (Clique aqui para ler as instruções)"):
         st.markdown("""
         Use este espaço para enviar **IDEIAS de competência MUNICIPAL**, tais como:
         * **Sugestões** para novos Projetos de Lei municipais.
         * **Indicações** (Ex: "Pedir a instalação de um quebra-molas na frente da escola Y" ou "Pedir mais horários de ônibus para a localidade Z").
-        * **Pedidos de Providência** (Ex: "Solicitar o conserto do buraco na Rua X").
+        * **Pedidos de Providência** (Ex: "Solicitar o conserto do buraco na Rua X", "Troca de Lâmpada na Rua Y, "Limpeza de Boca de Lobo"...).
         
         **IMPORTANTE: FOCO EM ESPUMOSO**
         Este formulário **NÃO é o canal** para manifestações gerais sobre política, nem para Reclamações ou Denúncias (para estes, use o canal de Ouvidoria).
