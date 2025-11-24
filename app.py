@@ -226,7 +226,7 @@ if modo == "🏠 Início":
     with col_c:
         with st.container(border=True):
             st.markdown("## 🏛️")
-            st.markdown("#### Mural de Notícias")
+            st.markdown("#### Mural de Recados")
             st.caption("Acompanhe as atividades dos vereadores.")
             st.button("Visitar Mural 👤", use_container_width=True, on_click=ir_para_gabinete)
 
