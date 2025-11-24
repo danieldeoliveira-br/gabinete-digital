@@ -251,7 +251,7 @@ elif modo == "👤 Gabinete Virtual":
     
     if vereador_selecionado == "Selecione...":
         st.divider()
-        st.subheader("📢 Feed de Notícias")
+        st.subheader("📢 Feed de Recados")
         if os.path.exists(arquivo_mural):
             df_mural = pd.read_csv(arquivo_mural)
             if not df_mural.empty:
