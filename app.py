@@ -222,6 +222,7 @@ if modo == "🏠 Início":
             st.markdown("#### Área do Vereador")
             st.caption("Acesso à Assitente para proposições e gestão do Mural.")
             st.button("Acessar Área Do Vereador 📝", use_container_width=True, on_click=ir_para_assistente)
+    """
     with col_b:
         with st.container(border=True):
             st.markdown("## 💡")
@@ -234,7 +235,7 @@ if modo == "🏠 Início":
             st.markdown("#### Mural de Recados")
             st.caption("Acompanhe as atividades dos vereadores.")
             st.button("Visitar Mural 👤", use_container_width=True, on_click=ir_para_gabinete)
-
+    """
     st.divider()
     st.markdown("### Acompanhe-nos nas Redes Sociais")
     
