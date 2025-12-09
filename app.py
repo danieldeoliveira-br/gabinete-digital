@@ -187,7 +187,7 @@ if "navegacao" not in st.session_state:
 
 modo = st.sidebar.selectbox(
     "Selecione a ferramenta:", 
-    ["🏠 Início", "👤 Gabinete Virtual", "🔐 Área do Vereador", "💡 Banco de Ideias"],
+    ["🏠 Início", "🔐 Área do Vereador"], # "💡 Banco de Ideias", "👤 Gabinete Virtual"],
     key="navegacao"
 )
 
