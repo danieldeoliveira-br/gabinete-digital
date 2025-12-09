@@ -223,18 +223,18 @@ if modo == "🏠 Início":
             st.caption("Acesso à Assitente para proposições e gestão do Mural.")
             st.button("Acessar Área Do Vereador 📝", use_container_width=True, on_click=ir_para_assistente)
     
-    with col_b:
-        with st.container(border=True):
-            st.markdown("## 💡")
-            st.markdown("#### Banco de Ideias")
-            st.caption("Canal direto para sugestões da comunidade.")
-            st.button("Enviar Ideia 🚀", use_container_width=True, on_click=ir_para_ideias)
-    with col_c:
-        with st.container(border=True):
-            st.markdown("## 🏛️")
-            st.markdown("#### Mural de Recados")
-            st.caption("Acompanhe as atividades dos vereadores.")
-            st.button("Visitar Mural 👤", use_container_width=True, on_click=ir_para_gabinete)
+   # with col_b:
+   #     with st.container(border=True):
+   #         st.markdown("## 💡")
+   #         st.markdown("#### Banco de Ideias")
+   #         st.caption("Canal direto para sugestões da comunidade.")
+   #         st.button("Enviar Ideia 🚀", use_container_width=True, on_click=ir_para_ideias)
+   # with col_c:
+   #     with st.container(border=True):
+   #         st.markdown("## 🏛️")
+   #         st.markdown("#### Mural de Recados")
+   #         st.caption("Acompanhe as atividades dos vereadores.")
+   #         st.button("Visitar Mural 👤", use_container_width=True, on_click=ir_para_gabinete)
     
     st.divider()
     st.markdown("### Acompanhe-nos nas Redes Sociais")
