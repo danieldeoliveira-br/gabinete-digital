@@ -20,7 +20,7 @@ LISTA_VEREADORES = [
     "Vereador Denner Fernando Duarte Senhor (PL)",
     "Vereador Eduardo Signor (UNIÃO BRASIL)",
     "Vereadora Fabiana Dolci Otoni (PROGRESSISTAS)",
-    "Vereadora Ivone Maria Capitanio Missio (PROGRESSISTAS)",
+    "Vereador Leonardo Comin (PROGRESSISTAS)",
     "Vereador Leandro Keller Colleraus (PDT)",
     "Vereadora Marina Camera Machado (PL)",
     "Vereador Paulo Flores de Moraes (PDT)",
