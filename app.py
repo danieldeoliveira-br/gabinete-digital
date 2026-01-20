@@ -207,7 +207,7 @@ if modo == "🏠 Início":
     st.warning("🚧 **SISTEMA EM FASE DE IMPLEMENTAÇÃO (BETA):** Esta ferramenta está em testes. O conteúdo gerado pela IA é uma sugestão e deve ser revisado antes do uso oficial. Reporte eventuais erros à Secretaria.")
     # --------------------------------------------
     
-    st.write("Bem-vindo ao ambiente digital do Poder Legislativo de Espumoso!")
+    st.write("Bem-vindo ao Assessor Digital do Poder Legislativo de Espumoso!")
     st.divider()
 
     def ir_para_assistente(): st.session_state.navegacao = "🔐 Área do Vereador"
@@ -220,7 +220,7 @@ if modo == "🏠 Início":
         with st.container(border=True): 
             st.markdown("## 🔐")
             st.markdown("#### Área do Vereador")
-            st.caption("Acesso à Assitente para proposições e gestão do Mural.")
+            st.caption("Acesso à Assistente para proposições e gestão do Mural.")
             st.button("Acessar Área Do Vereador 📝", use_container_width=True, on_click=ir_para_assistente)
     
    # with col_b:
