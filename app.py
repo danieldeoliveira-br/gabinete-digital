@@ -372,7 +372,14 @@ elif modo == "🔐 Área do Vereador":
             else:
                 autor_selecionado = st.selectbox("Autor:", [autor_sessao], disabled=True)
 
-            tipo_doc = st.selectbox("Tipo:", ["Pedido de Providência", "Pedido de Informação", "Indicação", "Projeto de Lei", "Moção", "Ofício de Gabinete"])
+            # --- ALTERAÇÃO: Lista vertical de botões (igual à dos vereadores) ---
+            st.write("Selecione o tipo de documento:")
+            tipo_doc = st.radio(
+                "Tipo de Documento:", 
+                ["Pedido de Providência", "Pedido de Informação", "Indicação", "Projeto de Lei", "Moção", "Ofício de Gabinete"],
+                label_visibility="collapsed" # Esconde o título repetido
+            )
+            # -------------------------------------------------------------------
             if tipo_doc == "Projeto de Lei": st.warning("⚠️ Cuidado com Vício de Iniciativa: O Assistente tentará elaborar evitando vícios, porém, a responsabilidade pela análise, correção, adequação formal e constitucionalidade final é integralmente do Vereador(a) autor e de sua assessoria.")
             texto_input = st.text_area("Escreva aqui qual a sua ideia ou qual o problema e como imagina a solução, quanto mais detalhes, melhor:", height=150)
             
