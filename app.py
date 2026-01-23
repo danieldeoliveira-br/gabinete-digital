@@ -116,9 +116,11 @@ def gerar_documento_ia(autor, tipo_doc, assunto):
     # --- DEFINIÇÃO DE ESTRUTURA PADRÃO (PRESERVA O ORIGINAL) ---
     cabecalho_txt = '1. CABEÇALHO: "EXCELENTÍSSIMO SENHOR PRESIDENTE..."'
     preambulo_txt = f'2. PREÂMBULO: "{autor}, integrante da Bancada [Extrair Partido], no uso de suas atribuições legais e regimentais, submete à apreciação do Plenário o seguinte {tipo_doc.upper()}:"'
+    justificativa_txt = "5. JUSTIFICATIVA (SEPARADA DO TEXTO): Título 'JUSTIFICATIVA' (em negrito). Escreva um texto dissertativo-argumentativo formal defendendo a proposta. Foque na relevância social, jurídica e no interesse público"
     fechamento_txt = '6. FECHAMENTO: "Plenário Agostinho Somavilla, [Data]." Assinatura, [Extrair Partido].'
     
     regras = ""
+    # --- REGRA 1: PROJETO DE LEI ---
     if tipo_doc == "Projeto de Lei":
         regras = """
         TÉCNICA LEGISLATIVA (OBRIGATÓRIO):
@@ -130,21 +132,28 @@ def gerar_documento_ia(autor, tipo_doc, assunto):
            - Último Artigo: 'Esta Lei entra em vigor na data de sua publicação.'
         """
 
-    # --- NOVA FUNÇÃO: OFÍCIO DE GABINETE ---
+    # --- REGRA 2: OFÍCIO DE GABINETE (PERSONALIZADO) ---
     elif tipo_doc == "Ofício de Gabinete":
         regras = """
-        ESTRUTURA DE OFÍCIO (CARTA OFICIAL):
+        ESTRUTURA DE CARTA OFICIAL (TEXTO CORRIDO E ÚNICO):
         1. TOPO: 'OFÍCIO DE GABINETE Nº ____/2026' (Deixe espaço).
         2. LOCAL E DATA: 'Espumoso/RS, [Data de Hoje].'
-        3. DESTINATÁRIO: Identifique no texto para quem é (Ex: Prefeito, Secretário).
+        3. DESTINATÁRIO: Identifique no input para quem é (Ex: Prefeito, Secretário).
         4. ASSUNTO: Resumo breve.
-        5. CORPO: Texto formal. Inicie com 'Ao cumprimentá-lo cordialmente...' ou similar.
+        5. CORPO DO TEXTO (MUITO IMPORTANTE):
+           - Inicie com 'Ao cumprimentá-lo cordialmente...' ou similar.
+           - NÃO FAÇA TÓPICOS. Faça parágrafos bem construídos.
+           - O texto deve ser LONGO, RICO e FORMAL.
+           - Comece explicando a necessidade do autor e contextualizando o cenário.
+           - Use APELO EMOCIONAL e INSPIRADOR sobre a importância disso para a comunidade/pessoas.
+           - Encerre fazendo a solicitação de forma firme mas polida.
         """
-        # Ajuste para não usar cabeçalho de Presidente/Plenário no Ofício
+        # Ajustes para Ofício: Removemos preâmbulo e justificativa separada
         cabecalho_txt = '1. CABEÇALHO: Formato de Ofício (Local, Data, Destinatário, Assunto).'
-        preambulo_txt = '2. PREÂMBULO: Dispensado (Vá direto ao texto).'
+        preambulo_txt = '2. PREÂMBULO: Dispensado (Vá direto ao corpo do texto).'
+        justificativa_txt = '5. JUSTIFICATIVA: NÃO GERE ESTA SEÇÃO. Toda a argumentação deve estar DENTRO do corpo do ofício.'
         fechamento_txt = '6. FECHAMENTO: Apenas "Atenciosamente," e o nome do Vereador.'
-    
+    # --- REGRA 3: DOCUMENTOS PADRÃO (INDICAÇÕES/PEDIDOS) ---
     else:
         regras = """
         ESTRUTURA DE TEXTO CORRIDO (Para Indicações/Pedidos):
@@ -163,12 +172,9 @@ def gerar_documento_ia(autor, tipo_doc, assunto):
     ESTRUTURA OBRIGATÓRIA:
     {cabecalho_txt}
     {preambulo_txt}
-    1. CABEÇALHO: "EXCELENTÍSSIMO SENHOR PRESIDENTE..."
-    2. PREÂMBULO: "{autor}, integrante da Bancada [Extrair Partido], no uso de suas atribuições legais e regimentais, submete à apreciação do Plenário o seguinte {tipo_doc.upper()}:"
-    3. EMENTA: (Caixa alta, resumo. Revise a ortografia).
+    3. EMENTA (Se for Ofício, ignore este item): (Caixa alta, resumo. Revise a ortografia).
     4. TEXTO (AQUI ENTRAM OS ARTIGOS OU O PEDIDO): {regras}
-    5. JUSTIFICATIVA (SOMENTE DEPOIS DO TEXTO DA LEI): 
-    Título 'JUSTIFICATIVA' (em negrito). Escreva um texto dissertativo-argumentativo formal defendendo a proposta. Foque na relevância social, jurídica e no interesse público
+    {justificativa_txt} 
     {fechamento_txt}
     
     IMPORTANTE: Adicione DUAS LINHAS EM BRANCO entre seções para facilitar leitura no celular.
