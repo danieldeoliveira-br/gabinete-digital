@@ -233,7 +233,7 @@ if modo == "🏠 Início":
     st.title("Legislativo Digital")
     
     # --- AVISO DE FASE BETA (ADICIONADO AQUI) ---
-    st.warning("🚧 **SISTEMA EM FASE DE IMPLEMENTAÇÃO (BETA):** Esta ferramenta está em testes. O conteúdo gerado pela IA é uma sugestão e deve ser revisado antes do uso oficial. Reporte eventuais erros à Secretaria.")
+    st.error("🚧 **SISTEMA EM FASE DE IMPLEMENTAÇÃO (BETA):** Esta ferramenta está em testes. O conteúdo gerado pela IA é uma sugestão e deve ser revisado antes do uso oficial. Reporte eventuais erros à Secretaria.")
     # --------------------------------------------
     
     st.write("Bem-vindo ao Assessor Digital do Poder Legislativo de Espumoso!")
