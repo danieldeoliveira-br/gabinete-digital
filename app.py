@@ -112,6 +112,11 @@ def gerar_revisao_ia(texto_base, pedido_revisao, autor, tipo_doc):
 def gerar_documento_ia(autor, tipo_doc, assunto):
     if not api_key: return "⚠️ ERRO: Chave API não encontrada!"
     client = Groq(api_key=api_key)
+
+    # --- DEFINIÇÃO DE ESTRUTURA PADRÃO (PRESERVA O ORIGINAL) ---
+    cabecalho_txt = '1. CABEÇALHO: "EXCELENTÍSSIMO SENHOR PRESIDENTE..."'
+    preambulo_txt = f'2. PREÂMBULO: "{autor}, integrante da Bancada [Extrair Partido], no uso de suas atribuições legais e regimentais, submete à apreciação do Plenário o seguinte {tipo_doc.upper()}:"'
+    fechamento_txt = '6. FECHAMENTO: "Plenário Agostinho Somavilla, [Data]." Assinatura, [Extrair Partido].'
     
     regras = ""
     if tipo_doc == "Projeto de Lei":
@@ -124,6 +129,22 @@ def gerar_documento_ia(autor, tipo_doc, assunto):
         5. CLÁUSULAS PADRÃO:
            - Último Artigo: 'Esta Lei entra em vigor na data de sua publicação.'
         """
+
+    # --- NOVA FUNÇÃO: OFÍCIO DE GABINETE ---
+    elif tipo_doc == "Ofício de Gabinete":
+        regras = """
+        ESTRUTURA DE OFÍCIO (CARTA OFICIAL):
+        1. TOPO: 'OFÍCIO DE GABINETE Nº ____/2026' (Deixe espaço).
+        2. LOCAL E DATA: 'Espumoso/RS, [Data de Hoje].'
+        3. DESTINATÁRIO: Identifique no texto para quem é (Ex: Prefeito, Secretário).
+        4. ASSUNTO: Resumo breve.
+        5. CORPO: Texto formal. Inicie com 'Ao cumprimentá-lo cordialmente...' ou similar.
+        """
+        # Ajuste para não usar cabeçalho de Presidente/Plenário no Ofício
+        cabecalho_txt = '1. CABEÇALHO: Formato de Ofício (Local, Data, Destinatário, Assunto).'
+        preambulo_txt = '2. PREÂMBULO: Dispensado (Vá direto ao texto).'
+        fechamento_txt = '6. FECHAMENTO: Apenas "Atenciosamente," e o nome do Vereador.'
+    
     else:
         regras = """
         ESTRUTURA DE TEXTO CORRIDO (Para Indicações/Pedidos):
@@ -140,13 +161,15 @@ def gerar_documento_ia(autor, tipo_doc, assunto):
     ASSUNTO: {assunto}.
     
     ESTRUTURA OBRIGATÓRIA:
+    {cabecalho_txt}
+    {preambulo_txt}
     1. CABEÇALHO: "EXCELENTÍSSIMO SENHOR PRESIDENTE..."
     2. PREÂMBULO: "{autor}, integrante da Bancada [Extrair Partido], no uso de suas atribuições legais e regimentais, submete à apreciação do Plenário o seguinte {tipo_doc.upper()}:"
     3. EMENTA: (Caixa alta, resumo. Revise a ortografia).
     4. TEXTO (AQUI ENTRAM OS ARTIGOS OU O PEDIDO): {regras}
     5. JUSTIFICATIVA (SOMENTE DEPOIS DO TEXTO DA LEI): 
     Título 'JUSTIFICATIVA' (em negrito). Escreva um texto dissertativo-argumentativo formal defendendo a proposta. Foque na relevância social, jurídica e no interesse público
-    6. FECHAMENTO: "Plenário Agostinho Somavilla, [Data]." Assinatura.
+    {fechamento_txt}
     
     IMPORTANTE: Adicione DUAS LINHAS EM BRANCO entre seções para facilitar leitura no celular.
     PROIBIDO: Não gere NENHUMA tag HTML, CSS ou formatação de código. Apenas texto puro.
@@ -337,7 +360,7 @@ elif modo == "🔐 Área do Vereador":
             else:
                 autor_selecionado = st.selectbox("Autor:", [autor_sessao], disabled=True)
 
-            tipo_doc = st.selectbox("Tipo:", ["Pedido de Providência", "Pedido de Informação", "Indicação", "Projeto de Lei", "Moção"])
+            tipo_doc = st.selectbox("Tipo:", ["Pedido de Providência", "Pedido de Informação", "Indicação", "Projeto de Lei", "Moção", "Ofício de Gabinete"])
             if tipo_doc == "Projeto de Lei": st.warning("⚠️ Cuidado com Vício de Iniciativa: O Assistente tentará elaborar evitando vícios, porém, a responsabilidade pela análise, correção, adequação formal e constitucionalidade final é integralmente do Vereador(a) autor e de sua assessoria.")
             texto_input = st.text_area("Escreva aqui qual a sua ideia ou qual o problema e como imagina a solução, quanto mais detalhes, melhor:", height=150)
             
