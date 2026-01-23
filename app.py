@@ -4,6 +4,7 @@ import os
 import pytz
 from datetime import datetime
 from groq import Groq
+import urllib.parse
 
 # --- CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(page_title="Legislativo Digital", page_icon="🏛️", layout="wide")
@@ -387,19 +388,32 @@ elif modo == "🔐 Área do Vereador":
                 st.error("🚨 AVISO LEGAL: Este texto é uma sugestão preliminar gerada por Inteligência Artificial (IA) e pode conter erros. Não possui validade jurídica. A responsabilidade pela análise, correção, adequação formal e constitucionalidade final é integralmente do Vereador(a) autor e de sua assessoria.")
                 st.subheader("Minuta Gerada:")
                 
-                st.text_area("Texto Final:", value=st.session_state['minuta_pronta'], height=800)
-                st.info("💡 Selecione todo o texto acima e copie manualmente.")
+                # --- CAIXA DE EDIÇÃO (Permite que o vereador corrija o texto) ---
+                # A variável 'texto_revisado' captura qualquer edição manual feita na hora
+                texto_revisado = st.text_area("Edite o texto abaixo se necessário:", value=st.session_state['minuta_pronta'], height=800)
                 
-                st.link_button("🌐 Ir para Softcam", "https://www.camaraespumoso.rs.gov.br/softcam/", type="primary", use_container_width=True)
-                st.link_button("💬 Abrir WhatsApp da Câmara", "https://wa.me/555433834488", type="primary", use_container_width=True)
+                # Atualiza a memória com a edição (para o botão de copiar pegar o texto novo)
+                st.session_state['minuta_pronta'] = texto_revisado 
                 
-                # --- ÁREA DE REVISÃO E HISTÓRICO ---
+                # --- ÁREA DE CÓPIA RÁPIDA (st.code) ---
+                st.caption("👇 **Para copiar:** Clique no ícone de 'duas folhinhas' 📄 que aparece no canto superior direito da caixa cinza abaixo:")
+                st.code(texto_revisado, language="markdown")
+                
+                # --- BOTÕES EXTERNOS ---
+                col_btn1, col_btn2 = st.columns(2)
+                with col_btn1:
+                    st.link_button("🌐 Ir para Softcam", "https://www.camaraespumoso.rs.gov.br/softcam/", type="primary", use_container_width=True)
+                with col_btn2:
+                    st.link_button("💬 Abrir WhatsApp da Câmara", "https://wa.me/555433834488", type="primary", use_container_width=True)
+                
+                # --- ÁREA DE REVISÃO E HISTÓRICO (Mantida Original) ---
                 
                 st.markdown("---")
                 st.subheader("🔄 Revisão e Histórico")
                 with st.form("revisao"):
                     msg_rev = st.text_input("O que melhorar? Peça uma revisão ou melhoria. Ex: 'Aumente a justificativa', 'Mude a ementa', 'Melhore a linguagem' ")
                     if st.form_submit_button("🔁 Revisar/Refazer"):
+                        # Usa o 'texto_revisado' para que a IA considere as edições manuais do vereador
                         nova_minuta = gerar_revisao_ia(st.session_state['minuta_pronta'], msg_rev, autor_selecionado, st.session_state['tipo_atual'])
                         st.session_state['prop_ver'] += 1
                         st.session_state['minuta_pronta'] = nova_minuta
