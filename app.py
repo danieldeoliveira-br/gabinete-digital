@@ -402,7 +402,7 @@ elif modo == "🔐 Área do Vereador":
                 
                 # --- ÁREA DE CÓPIA RÁPIDA (st.code) ---
                 st.caption("👇 **Para copiar:** Clique no ícone de 'duas folhinhas' 📄 que aparece no canto superior direito da caixa cinza abaixo:")
-                st.code(texto_revisado, language="markdown")
+                st.code("\n\n" + texto_revisado, language="markdown")
                 
                 # --- BOTÕES EXTERNOS ---
                 col_btn1, col_btn2 = st.columns(2)
