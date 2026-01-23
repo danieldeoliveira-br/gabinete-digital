@@ -391,6 +391,7 @@ elif modo == "🔐 Área do Vereador":
                 st.info("💡 Selecione todo o texto acima e copie manualmente.")
                 
                 st.link_button("🌐 Ir para Softcam", "https://www.camaraespumoso.rs.gov.br/softcam/", type="primary", use_container_width=True)
+                st.link_button("💬 Abrir WhatsApp da Câmara", "https://wa.me/555433834488", type="primary", use_container_width=True)
                 
                 # --- ÁREA DE REVISÃO E HISTÓRICO ---
                 
