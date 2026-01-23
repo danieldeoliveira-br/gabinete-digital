@@ -268,7 +268,7 @@ if modo == "🏠 Início":
     st.divider()
     st.markdown("### Acompanhe-nos nas Redes Sociais")
     
-    estilo = "text-decoration:none;color:#FAFAFA;"
+    estilo = "text-decoration:none;color:#31333F;"
     cf, ci, cy, cd, cs = st.columns(5)
     with cf: st.markdown(f'<a href="https://facebook.com/camaraespumoso" style="{estilo}">📘 Facebook</a>', unsafe_allow_html=True)
     with ci: st.markdown(f'<a href="https://instagram.com/camaraespumoso" style="{estilo}">📸 Instagram</a>', unsafe_allow_html=True)
